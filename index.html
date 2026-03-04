@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Marble Lab Pro | Dark Edition</title>
+    <title>Sand Timer Lab | Precision Data</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg-page: #0f172a;
@@ -74,6 +75,10 @@
         .timer-glow {
             text-shadow: 0 0 20px rgba(129, 140, 248, 0.6);
         }
+        
+        .timer-glow-neg {
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
+        }
 
         .timer-active {
             background: #ef4444;
@@ -96,6 +101,7 @@
 
         tr.clickable-row { cursor: pointer; transition: background 0.2s; }
         tr.clickable-row:hover { background: rgba(129, 140, 248, 0.1); }
+        tr.editing-row { background: rgba(251, 191, 36, 0.1); border-left: 4px solid #fbbf24; }
 
         #touch-ghost {
             position: fixed;
@@ -104,6 +110,39 @@
             opacity: 0.8;
             display: none;
             transform: translate(-50%, -50%);
+        }
+
+        .timer-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: inherit;
+            font-family: inherit;
+            text-align: center;
+            padding: 0;
+            margin: 0;
+            width: auto;
+            display: inline-block;
+        }
+        .timer-input:disabled {
+            cursor: default;
+        }
+        .timer-input::-webkit-outer-spin-button,
+        .timer-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .timer-input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .analytics-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .analytics-panel.open {
+            max-height: 600px;
         }
     </style>
 </head>
@@ -133,18 +172,15 @@
             <div class="flex items-center gap-6">
                 <div class="relative w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-2xl ring-4 ring-indigo-500/20">
                     <svg viewBox="0 0 100 100" class="w-10 h-10 fill-current">
-                        <circle cx="50" cy="50" r="35" fill="none" stroke="currentColor" stroke-width="8"/>
-                        <circle cx="50" cy="50" r="10" />
-                        <circle cx="50" cy="22" r="6" />
-                        <circle cx="78" cy="50" r="6" />
-                        <circle cx="50" cy="78" r="6" />
-                        <circle cx="22" cy="50" r="6" />
+                        <path d="M30 20 H70 L65 45 Q50 50 35 45 Z" />
+                        <path d="M30 80 H70 L65 55 Q50 50 35 55 Z" />
+                        <rect x="48" y="45" width="4" height="10" />
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-4xl font-black tracking-tighter leading-none">MARBLE LAB <span class="text-indigo-400">PRO</span></h1>
+                    <h1 class="text-4xl font-black tracking-tighter leading-none uppercase">Sand Timer <span class="text-indigo-400">Lab</span></h1>
                     <div class="flex items-center gap-2 mt-2 opacity-40">
-                        <span class="text-[10px] font-black uppercase tracking-[0.3em]">Scientific Precision Mode</span>
+                        <span class="text-[10px] font-black uppercase tracking-[0.3em]">Precision Flow Environment</span>
                         <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
                     </div>
                 </div>
@@ -153,8 +189,14 @@
             <div class="flex flex-wrap items-center gap-4">
                 <div class="flex items-center gap-6 glass-card px-8 py-4 bg-indigo-900/10">
                     <div class="text-right">
-                        <div class="text-[10px] font-black opacity-30 uppercase tracking-widest mb-0.5">Live Trial Time</div>
-                        <div id="timer-display" class="text-4xl font-mono font-black text-indigo-400 timer-glow">0:00.00</div>
+                        <div class="text-[10px] font-black opacity-30 uppercase tracking-widest mb-0.5">Trial Timer</div>
+                        <div id="timer-group" class="text-4xl font-mono font-black text-indigo-400 timer-glow flex items-center transition-colors">
+                            <input type="number" id="timer-min" class="timer-input w-12 text-right" value="0" placeholder="0">
+                            <span>:</span>
+                            <input type="number" id="timer-sec" class="timer-input w-14 text-center" value="00" placeholder="00">
+                            <span>.</span>
+                            <input type="number" id="timer-cent" class="timer-input w-12 text-left" value="00" placeholder="00">
+                        </div>
                     </div>
                     <button id="toggle-timer" class="w-16 h-16 rounded-3xl bg-indigo-600 text-white flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-xl shadow-indigo-900/50">
                         <i data-lucide="play" class="w-8 h-8" id="timer-icon" fill="currentColor"></i>
@@ -166,14 +208,26 @@
             </div>
         </header>
 
+        <section id="analytics-section" class="analytics-panel">
+            <div class="glass-card p-6 h-full min-h-[450px]">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="font-black text-xl tracking-tighter flex items-center gap-2 text-indigo-400 uppercase">
+                        <i data-lucide="bar-chart-3"></i> Aperture Performance
+                    </h2>
+                </div>
+                <div class="relative h-[320px] w-full">
+                    <canvas id="lab-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
             <div class="lg:col-span-8 space-y-8">
                 <div class="flex flex-col md:flex-row gap-8">
                     <div class="md:w-64 space-y-6">
                         <section class="glass-card p-6 space-y-5">
                             <h2 class="text-[11px] font-black opacity-40 uppercase tracking-[0.2em] flex items-center gap-2">
-                                <i data-lucide="archive" class="w-3 h-3"></i> Assets
+                                <i data-lucide="layers" class="w-3 h-3"></i> Assets
                             </h2>
                             <div class="space-y-3">
                                 <div draggable="true" ondragstart="handleDragStart(event, 'small')" ontouchstart="handleTouchStart(event, 'small')" class="marble-source flex items-center justify-between p-4 bg-slate-800 rounded-2xl cursor-grab hover:bg-slate-700 transition-colors group">
@@ -193,7 +247,7 @@
                                 <div draggable="true" ondragstart="handleDragStart(event, 'large')" ontouchstart="handleTouchStart(event, 'large')" class="marble-source flex items-center justify-between p-4 bg-slate-800 rounded-2xl cursor-grab hover:bg-slate-700 transition-colors group">
                                     <div class="flex items-center gap-4">
                                         <div class="w-12 h-12 bg-slate-900 border-2 border-orange-500 rounded-full shadow-xl ring-4 ring-slate-900/20"></div>
-                                        <span class="font-black text-xs uppercase tracking-tight">Large</span>
+                                        <span class="font-black text-xs uppercase tracking-tight text-slate-200">Large</span>
                                     </div>
                                     <kbd class="px-2 py-0.5 rounded bg-slate-900 text-[9px] font-black opacity-50 border border-slate-700">3</kbd>
                                 </div>
@@ -214,16 +268,29 @@
 
             <div class="lg:col-span-4 space-y-6">
                 <section class="glass-card p-8 space-y-6">
-                    <h2 class="text-[11px] font-black opacity-40 uppercase tracking-[0.2em]">Trial Notes</h2>
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-[11px] font-black opacity-40 uppercase tracking-[0.2em]">Trial Notes</h2>
+                        <div id="edit-indicator" class="hidden flex items-center gap-1.5 text-[10px] font-bold text-amber-400 uppercase bg-amber-900/20 px-2 py-1 rounded-lg">
+                            <i data-lucide="edit-3" class="w-3 h-3"></i> Edit Mode
+                        </div>
+                    </div>
                     <div class="space-y-4">
                         <textarea id="trial-comment" placeholder="Describe experimental results..." class="w-full h-32 p-5 rounded-3xl bg-slate-800 border-none focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm font-medium"></textarea>
                         
-                        <button id="save-run" class="w-full py-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black tracking-widest shadow-2xl shadow-indigo-900/50 hover:-translate-y-1 transition-all flex items-center justify-center gap-3">
-                            <i data-lucide="save"></i> RECORD TRIAL
-                        </button>
+                        <div id="action-buttons" class="space-y-3">
+                            <button id="save-run" class="w-full py-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black tracking-widest shadow-2xl shadow-indigo-900/50 transition-all flex items-center justify-center gap-3">
+                                <i data-lucide="save"></i> RECORD TRIAL
+                            </button>
+                            <button id="cancel-edit" class="hidden w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2">
+                                <i data-lucide="x" class="w-3 h-3"></i> Cancel Edit
+                            </button>
+                        </div>
 
                         <div class="pt-4 space-y-3 border-t border-slate-800">
-                             <button id="btn-clear-current" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-indigo-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2">
+                             <button id="btn-toggle-analytics" class="w-full py-3 bg-indigo-900/20 hover:bg-indigo-900/40 text-indigo-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2">
+                                <i data-lucide="bar-chart-2" class="w-3 h-3"></i> Toggle Analytics Mode
+                            </button>
+                             <button id="btn-clear-current" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2">
                                 <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Clear Current Session
                             </button>
                              <button id="show-confirm-modal" class="w-full py-3 text-red-500/60 hover:text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-red-900/20 rounded-xl transition-colors flex items-center justify-center gap-2">
@@ -248,10 +315,10 @@
         <section class="glass-card overflow-hidden">
             <div class="p-8 border-b border-slate-800 flex justify-between items-center bg-slate-800/20">
                 <div class="flex items-center gap-4">
-                    <h2 class="font-black text-2xl tracking-tighter">RESULTS LOG</h2>
+                    <h2 class="font-black text-2xl tracking-tighter text-indigo-100 uppercase">Results Log</h2>
                     <span id="trial-count" class="px-5 py-1 bg-indigo-600 text-white text-[10px] font-black rounded-full uppercase tracking-widest">0 TRIALS</span>
                 </div>
-                <div class="hidden md:block text-[10px] font-black opacity-30 uppercase">Click row to recall configuration</div>
+                <div class="hidden md:block text-[10px] font-black opacity-30 uppercase">Click row to edit trial details</div>
             </div>
             <div class="overflow-x-auto max-h-[600px] custom-scrollbar">
                 <table class="w-full text-left">
@@ -266,7 +333,7 @@
                         </tr>
                     </thead>
                     <tbody id="log-body" class="divide-y divide-slate-800">
-                        <tr><td colspan="6" class="px-8 py-20 text-center opacity-20 italic">No experimental data found.</td></tr>
+                        <tr><td colspan="6" class="px-8 py-20 text-center opacity-20 italic font-medium tracking-tight">No experimental data found.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -281,7 +348,7 @@
         };
 
         const HOLE_SIZES = [14, 22, 30, 38, 46];
-        const STORAGE_KEY = 'marble_lab_pro_v6_data';
+        const STORAGE_KEY = 'sand_timer_lab_v9_persistent';
 
         let state = {
             grid: Array(9).fill(null),
@@ -291,8 +358,17 @@
             isRunning: false,
             msTime: 0,
             startTime: null,
-            timerId: null
+            timerId: null,
+            editingId: null,
+            analyticsOpen: false
         };
+
+        let labChart = null;
+
+        const minIn = document.getElementById('timer-min');
+        const secIn = document.getElementById('timer-sec');
+        const centIn = document.getElementById('timer-cent');
+        const timerGroup = document.getElementById('timer-group');
 
         function saveToLocalStorage() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -300,6 +376,7 @@
                 grid: state.grid,
                 selectedHole: state.selectedHole
             }));
+            updateAnalytics();
         }
 
         function loadFromLocalStorage() {
@@ -311,7 +388,38 @@
                 state.selectedHole = parsed.selectedHole ?? null;
             }
             renderAll();
+            initChart();
         }
+
+        function syncStateFromInputs() {
+            if (state.isRunning) return;
+            const mins = parseInt(minIn.value) || 0;
+            const secs = parseInt(secIn.value) || 0;
+            const cents = parseInt(centIn.value) || 0;
+            
+            const isNegative = mins < 0 || secIn.value.includes('-') || centIn.value.includes('-');
+            
+            const absMins = Math.abs(mins);
+            const absSecs = Math.abs(secs);
+            const absCents = Math.abs(cents);
+            
+            state.msTime = (absMins * 60000) + (absSecs * 1000) + (absCents * 10);
+            if (isNegative) state.msTime *= -1;
+            
+            updateTimerDisplayColor();
+            updateAnalytics();
+        }
+
+        [minIn, secIn, centIn].forEach(input => {
+            input.addEventListener('input', () => {
+                if (state.isRunning) return;
+                syncStateFromInputs();
+            });
+            input.addEventListener('blur', () => {
+                if (state.isRunning) return;
+                renderTimerValues(state.msTime);
+            });
+        });
 
         window.handleDragStart = (e, type, fromIndex = null) => {
             e.dataTransfer.setData('type', type);
@@ -405,21 +513,90 @@
             });
         }
 
+        function initChart() {
+            const ctx = document.getElementById('lab-chart').getContext('2d');
+            labChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['H1', 'H2', 'H3', 'H4', 'H5'],
+                    datasets: [{
+                        label: 'Avg. Seconds',
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: '#818cf8',
+                        borderRadius: 12,
+                        hoverBackgroundColor: '#6366f1',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#64748b' },
+                            title: { display: true, text: 'Seconds', color: '#64748b' }
+                        },
+                        x: { 
+                            grid: { display: false },
+                            ticks: { color: '#64748b' }
+                        }
+                    }
+                }
+            });
+            updateAnalytics();
+        }
+
+        function updateAnalytics() {
+            if (!labChart) return;
+            const sums = [0, 0, 0, 0, 0];
+            const counts = [0, 0, 0, 0, 0];
+            state.logs.forEach(log => {
+                if (log.holeIndex !== null) {
+                    const timeSecs = parseTime(log.duration) / 1000;
+                    sums[log.holeIndex] += timeSecs;
+                    counts[log.holeIndex]++;
+                }
+            });
+            const averages = sums.map((sum, i) => counts[i] > 0 ? (sum / counts[i]) : 0);
+            labChart.data.datasets[0].data = averages;
+            labChart.update();
+        }
+
         function recallTrial(trialId) {
             const trial = state.logs.find(l => l.id === trialId);
             if (!trial) return;
+            state.editingId = trial.id;
             state.grid = [...trial.gridData];
             state.selectedHole = trial.holeIndex;
             state.selectedCell = null;
-            renderGrid();
-            renderRod();
+            state.msTime = parseTime(trial.duration) || 0;
+            renderTimerValues(state.msTime);
+            document.getElementById('trial-comment').value = trial.comment || '';
+            document.getElementById('edit-indicator').classList.remove('hidden');
+            document.getElementById('cancel-edit').classList.remove('hidden');
+            document.getElementById('save-run').innerHTML = '<i data-lucide="check-circle"></i> Update Result';
+            document.getElementById('save-run').classList.replace('bg-indigo-600', 'bg-amber-600');
+            renderGrid(); renderRod(); renderLogs();
+            lucide.createIcons();
+        }
+
+        function cancelEditing() {
+            state.editingId = null;
+            document.getElementById('edit-indicator').classList.add('hidden');
+            document.getElementById('cancel-edit').classList.add('hidden');
+            document.getElementById('save-run').innerHTML = '<i data-lucide="save"></i> Record Trial';
+            document.getElementById('save-run').classList.replace('bg-amber-600', 'bg-indigo-600');
+            resetStation();
+            lucide.createIcons();
         }
 
         function deleteTrial(trialId, event) {
             event.stopPropagation();
+            if (state.editingId === trialId) cancelEditing();
             state.logs = state.logs.filter(l => l.id !== trialId);
-            saveToLocalStorage();
-            renderLogs();
+            saveToLocalStorage(); renderLogs();
         }
 
         function renderLogs() {
@@ -430,7 +607,7 @@
                 return;
             }
             logBody.innerHTML = state.logs.map(log => `
-                <tr class="clickable-row border-b border-slate-800/50" onclick="recallTrial(${log.id})">
+                <tr class="clickable-row border-b border-slate-800/50 ${state.editingId === log.id ? 'editing-row' : ''}" onclick="recallTrial(${log.id})">
                     <td class="px-8 py-6 text-[10px] font-black opacity-30 font-mono uppercase">${log.timestamp}</td>
                     <td class="px-8 py-6"><span class="px-3 py-1.5 rounded-lg bg-indigo-900/30 text-indigo-400 text-[10px] font-black uppercase border border-indigo-800">${log.gridSummary}</span></td>
                     <td class="px-8 py-6 text-center"><span class="px-3 py-1.5 bg-red-600 text-white text-[10px] font-black rounded-lg shadow-lg shadow-red-500/20 uppercase">${log.holeLabel}</span></td>
@@ -446,36 +623,66 @@
             lucide.createIcons();
         }
 
-        function renderAll() { renderGrid(); renderRod(); renderLogs(); }
+        function renderAll() { renderGrid(); renderRod(); renderLogs(); renderTimerValues(state.msTime); }
 
-        function formatTime(totalMs) {
-            const mins = Math.floor(totalMs / 60000);
-            const secs = Math.floor((totalMs % 60000) / 1000);
-            const cents = Math.floor((totalMs % 1000) / 10);
-            return `${mins}:${secs.toString().padStart(2, '0')}.${cents.toString().padStart(2, '0')}`;
+        function renderTimerValues(totalMs) {
+            const isNeg = totalMs < 0;
+            const absMs = Math.abs(totalMs);
+            const mins = Math.floor(absMs / 60000);
+            const secs = Math.floor((absMs % 60000) / 1000);
+            const cents = Math.floor((absMs % 1000) / 10);
+            
+            minIn.value = isNeg ? -mins : mins;
+            secIn.value = secs.toString().padStart(2, '0');
+            centIn.value = cents.toString().padStart(2, '0');
+            updateTimerDisplayColor();
+        }
+
+        function updateTimerDisplayColor() {
+            if (state.msTime < 0) {
+                timerGroup.classList.replace('text-indigo-400', 'text-amber-500');
+                timerGroup.classList.replace('timer-glow', 'timer-glow-neg');
+            } else {
+                timerGroup.classList.replace('text-amber-500', 'text-indigo-400');
+                timerGroup.classList.replace('timer-glow-neg', 'timer-glow');
+            }
+        }
+
+        function parseTime(timeStr) {
+            try {
+                const isNeg = timeStr.startsWith('-');
+                const cleanStr = isNeg ? timeStr.substring(1) : timeStr;
+                const parts = cleanStr.split(/[:.]/);
+                let ms = 0;
+                if (parts.length === 3) {
+                    ms += parseInt(parts[0]) * 60000;
+                    ms += parseInt(parts[1]) * 1000;
+                    ms += parseInt(parts[2]) * 10;
+                } else if (parts.length === 2) {
+                    ms += parseInt(parts[0]) * 1000;
+                    ms += parseInt(parts[1]) * 10;
+                }
+                return isNeg ? -ms : ms;
+            } catch (e) { return 0; }
         }
 
         function updateTimer() {
             if (!state.isRunning) return;
             state.msTime = Date.now() - state.startTime;
-            document.getElementById('timer-display').innerText = formatTime(state.msTime);
+            renderTimerValues(state.msTime);
             state.timerId = requestAnimationFrame(updateTimer);
         }
 
         function resetStation() {
-            state.isRunning = false;
-            state.msTime = 0;
+            state.isRunning = false; state.msTime = 0;
             state.grid = Array(9).fill(null);
-            state.selectedHole = null;
-            state.selectedCell = null;
+            state.selectedHole = null; state.selectedCell = null;
             cancelAnimationFrame(state.timerId);
-            document.getElementById('timer-display').innerText = "0:00.00";
+            renderTimerValues(0);
             document.getElementById('toggle-timer').classList.remove('timer-active');
             document.getElementById('timer-icon').setAttribute('data-lucide', 'play');
-            renderGrid();
-            renderRod();
-            lucide.createIcons();
-            saveToLocalStorage();
+            minIn.disabled = secIn.disabled = centIn.disabled = false;
+            renderGrid(); renderRod(); lucide.createIcons(); saveToLocalStorage();
         }
 
         document.getElementById('toggle-timer').onclick = () => {
@@ -486,11 +693,14 @@
                 state.startTime = Date.now() - state.msTime;
                 icon.setAttribute('data-lucide', 'square');
                 btn.classList.add('timer-active');
+                minIn.disabled = secIn.disabled = centIn.disabled = true;
                 updateTimer();
             } else {
                 cancelAnimationFrame(state.timerId);
                 icon.setAttribute('data-lucide', 'play');
                 btn.classList.remove('timer-active');
+                minIn.disabled = secIn.disabled = centIn.disabled = false;
+                renderTimerValues(state.msTime);
             }
             lucide.createIcons();
         };
@@ -498,7 +708,8 @@
         document.getElementById('reset-timer').onclick = () => {
             state.isRunning = false; state.msTime = 0;
             cancelAnimationFrame(state.timerId);
-            document.getElementById('timer-display').innerText = "0:00.00";
+            renderTimerValues(0);
+            minIn.disabled = secIn.disabled = centIn.disabled = false;
             document.getElementById('toggle-timer').classList.remove('timer-active');
             document.getElementById('timer-icon').setAttribute('data-lucide', 'play');
             lucide.createIcons();
@@ -506,41 +717,60 @@
 
         document.getElementById('save-run').onclick = () => {
             const summary = state.grid.map((item, i) => (item ? `${MARBLE_TYPES[item].size}@${i + 1}` : null)).filter(Boolean).join(', ') || 'Empty';
-            state.logs.unshift({
-                id: Date.now(),
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-                gridSummary: summary,
-                gridData: [...state.grid],
-                holeIndex: state.selectedHole,
-                holeLabel: state.selectedHole !== null ? `H${state.selectedHole + 1}` : '—',
-                duration: formatTime(state.msTime),
-                comment: document.getElementById('trial-comment').value
-            });
-            document.getElementById('trial-comment').value = '';
-            saveToLocalStorage();
-            renderLogs();
-            resetStation();
+            const comment = document.getElementById('trial-comment').value;
+            const isNeg = state.msTime < 0;
+            const absTime = Math.abs(state.msTime);
+            const duration = (isNeg ? '-' : '') + `${Math.floor(absTime/60000)}:${Math.floor((absTime%60000)/1000).toString().padStart(2,'0')}.${Math.floor((absTime%1000)/10).toString().padStart(2,'0')}`;
+
+            if (state.editingId) {
+                const index = state.logs.findIndex(l => l.id === state.editingId);
+                if (index !== -1) {
+                    state.logs[index] = {
+                        ...state.logs[index],
+                        gridSummary: summary,
+                        gridData: [...state.grid],
+                        holeIndex: state.selectedHole,
+                        holeLabel: state.selectedHole !== null ? `H${state.selectedHole + 1}` : '—',
+                        duration: duration,
+                        comment: comment
+                    };
+                }
+                cancelEditing();
+            } else {
+                state.logs.unshift({
+                    id: Date.now(),
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                    gridSummary: summary,
+                    gridData: [...state.grid],
+                    holeIndex: state.selectedHole,
+                    holeLabel: state.selectedHole !== null ? `H${state.selectedHole + 1}` : '—',
+                    duration: duration,
+                    comment: comment
+                });
+                resetStation();
+            }
+            saveToLocalStorage(); renderLogs();
         };
 
-        document.getElementById('btn-clear-current').onclick = () => {
-            resetStation();
+        document.getElementById('cancel-edit').onclick = cancelEditing;
+        document.getElementById('btn-toggle-analytics').onclick = () => {
+            state.analyticsOpen = !state.analyticsOpen;
+            document.getElementById('analytics-section').classList.toggle('open', state.analyticsOpen);
+            if (state.analyticsOpen) updateAnalytics();
         };
+        document.getElementById('btn-clear-current').onclick = resetStation;
 
         const modal = document.getElementById('confirm-modal');
         document.getElementById('show-confirm-modal').onclick = () => modal.classList.replace('hidden', 'flex');
         document.getElementById('modal-cancel').onclick = () => modal.classList.replace('flex', 'hidden');
         document.getElementById('modal-confirm').onclick = () => {
-            state.logs = [];
-            resetStation();
-            saveToLocalStorage();
-            renderLogs();
-            modal.classList.replace('flex', 'hidden');
+            state.logs = []; resetStation(); saveToLocalStorage(); renderLogs(); modal.classList.replace('flex', 'hidden');
         };
 
         document.getElementById('btn-export').onclick = () => {
             const blob = new Blob([JSON.stringify(state.logs, null, 2)], {type : 'application/json'});
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-            a.download = `MarbleLabPro_Data_${new Date().toISOString().slice(0,10)}.json`; a.click();
+            a.download = `SandTimerLab_Data_${new Date().toISOString().slice(0,10)}.json`; a.click();
         };
 
         document.getElementById('btn-import').onclick = () => document.getElementById('import-input').click();
@@ -551,17 +781,34 @@
                     const data = JSON.parse(ev.target.result);
                     state.logs = Array.isArray(data) ? [...data, ...state.logs] : state.logs;
                     saveToLocalStorage(); renderLogs();
-                } catch(err) { alert("Import Failed: Invalid JSON."); }
+                } catch(err) { alert("Import Failed."); }
             };
             reader.readAsText(e.target.files[0]);
         };
 
         window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && document.activeElement.tagName !== 'TEXTAREA') { e.preventDefault(); document.getElementById('toggle-timer').click(); }
-            if (state.selectedCell === null) return;
-            const map = { '1': 'small', '2': 'medium', '3': 'large' };
-            if (map[e.key]) { state.grid[state.selectedCell] = map[e.key]; saveToLocalStorage(); renderGrid(); }
-            else if (e.key === 'Backspace' || e.key === 'Delete') { state.grid[state.selectedCell] = null; saveToLocalStorage(); renderGrid(); }
+            if (e.code === 'Space' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT') { 
+                e.preventDefault(); document.getElementById('toggle-timer').click(); return;
+            }
+            if (document.activeElement.tagName === 'INPUT') return;
+            if (state.selectedCell !== null) {
+                const map = { '1': 'small', '2': 'medium', '3': 'large' };
+                if (map[e.key]) { state.grid[state.selectedCell] = map[e.key]; saveToLocalStorage(); renderGrid(); return; }
+                if (e.key === 'Backspace' || e.key === 'Delete') { state.grid[state.selectedCell] = null; saveToLocalStorage(); renderGrid(); return; }
+            }
+            const moveKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD'];
+            if (moveKeys.includes(e.code) && document.activeElement.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                if (state.selectedCell === null) state.selectedCell = 0;
+                else {
+                    const r = Math.floor(state.selectedCell / 3), c = state.selectedCell % 3;
+                    if (e.code === 'ArrowUp' || e.code === 'KeyW') { if (r > 0) state.selectedCell -= 3; }
+                    else if (e.code === 'ArrowDown' || e.code === 'KeyS') { if (r < 2) state.selectedCell += 3; }
+                    else if (e.code === 'ArrowLeft' || e.code === 'KeyA') { if (c > 0) state.selectedCell -= 1; }
+                    else if (e.code === 'ArrowRight' || e.code === 'KeyD') { if (c < 2) state.selectedCell += 1; }
+                }
+                renderGrid();
+            }
         });
 
         document.body.onclick = (e) => { if (e.target.tagName === 'BODY' || e.target.id === 'main-grid') { state.selectedCell = null; renderGrid(); } };
