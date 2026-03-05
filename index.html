@@ -82,12 +82,7 @@
 
         .timer-active {
             background: #ef4444;
-            animation: timer-pulse 2s infinite;
-        }
-
-        @keyframes timer-pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
         }
 
         .rod-hole-btn {
@@ -143,6 +138,7 @@
         }
         .analytics-panel.open {
             max-height: 600px;
+            margin-bottom: 2rem;
         }
     </style>
 </head>
@@ -153,14 +149,14 @@
     <div id="confirm-modal" class="modal-overlay fixed inset-0 z-[100] hidden items-center justify-center p-4">
         <div class="glass-card max-w-sm w-full p-8 space-y-6">
             <div class="w-16 h-16 bg-red-900/50 text-red-500 rounded-3xl flex items-center justify-center mx-auto">
-                <i data-lucide="trash-2" class="w-8 h-8"></i>
+                <i data-lucide="trash-2" class="w-8 h-8 text-red-500"></i>
             </div>
             <div class="text-center space-y-2">
-                <h3 class="text-xl font-black uppercase tracking-tight">Purge All History?</h3>
-                <p class="text-sm text-slate-400">This will permanently delete all recorded results in your log. This action cannot be undone.</p>
+                <h3 class="text-xl font-black uppercase tracking-tight text-white">Purge All History?</h3>
+                <p class="text-sm text-slate-400">This will permanently delete all recorded results in your log.</p>
             </div>
             <div class="flex gap-3 pt-2">
-                <button id="modal-cancel" class="flex-1 py-4 bg-slate-800 hover:bg-slate-700 font-bold rounded-2xl transition-colors">Cancel</button>
+                <button id="modal-cancel" class="flex-1 py-4 bg-slate-800 hover:bg-slate-700 font-bold rounded-2xl transition-colors text-white">Cancel</button>
                 <button id="modal-confirm" class="flex-1 py-4 bg-red-600 text-white font-bold rounded-2xl shadow-lg shadow-red-900/20">Purge Log</button>
             </div>
         </div>
@@ -170,17 +166,16 @@
         
         <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div class="flex items-center gap-6">
-                <div class="relative w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-2xl ring-4 ring-indigo-500/20">
-                    <svg viewBox="0 0 100 100" class="w-10 h-10 fill-current">
-                        <path d="M30 20 H70 L65 45 Q50 50 35 45 Z" />
-                        <path d="M30 80 H70 L65 55 Q50 50 35 55 Z" />
-                        <rect x="48" y="45" width="4" height="10" />
+                <a href="https://kineticlogiclabs.github.io" class="block transition-transform hover:scale-105 active:scale-95 group" title="Visit Kinetic Logic Labs">
+                    <svg viewBox="0 0 700 800" class="w-16 h-16 text-white fill-current drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] group-hover:text-indigo-400 transition-colors">
+                        <path d="M386.99,758.16l-32.5,18.39c-9.19,5.2-17.22,3.66-26.1-1.56l-212.56-124.94-97.59-57.79c-5.17-3.03-10.65-7.19-15.56-12.92-.19-.22-.37-.46-.54-.7h0c-.92-1.34-1.42-2.92-1.42-4.55l-.1-359.61c0-.62-.09-1.24-.22-1.85-1.5-7.05,1.23-13.41,7.53-17.22l99.7-60.38L330.11,3.96c5.7-3.36,12.79-5.44,18.55-2.69,12.37,5.91,22.82,11.89,34.74,18.9l212.4,124.99,81.93,49.64c4.41,2.67,7.38,9.18,7.44,14.09l.93,81.49.39,279.84c0,3.75-1.26,7.41-3.69,10.26-3.63,4.23-8.17,7.67-12.66,10.38l-42.13,25.48-241.02,141.81h0ZM656.19,564.85l.43-204.03.25-102.65-.93-35.51c-.15-5.63-2.78-9.47-7.96-12.52l-201.14-118.53-103.03-59.64c-6.09,2.49-10.74,4.61-16.62,8.08L30.41,215.29l-.45,197.89c-.5,6.61-.6,11.7-.13,18.06l.02,133.73,313.32,183.59,39.77-22.91,273.24-160.79h.01Z"/>
+                        <path d="M307.34,658.58c-4.29.03-8.9-8.89-10.23-12.84l-11.25-33.58c-.85-2.54-3.59-6.81-5.91-7.78l-46.37-19.37-41.8,21.16c-6.88,3.49-13.75-1.24-18.46-5.66l-24.11-22.62c-7.11-6.67-26.35-22.05-21.32-32.58l16.64-34.79c2.96-6.19,2.56-11.33-.4-17.71-6.24-13.43-11.55-26.94-16.37-41.09l-43.55-13.49c-4.13-1.28-10.87-7.65-10.99-12.05-.59-21.66-.48-41.69.3-62.84.28-7.55,5.56-12.79,12.3-14.71l33.39-9.55c6.58-1.88,8.32-5.26,10.75-11.15l17.49-42.39-16.57-34.11c-2.31-4.75-6.9-15.44-2.72-20.02,14.24-15.54,28.92-29.75,43.95-44.2,7.45-7.16,16.61-8.68,25.6-4.06l35.51,18.24c17.33-8.03,32.92-14.63,50.45-21.11l12.73-41.18c2.7-8.74,9.93-12.93,18.72-12.89l56.05.26c8.52.04,14.36,4.55,17.09,12.54l14.09,41.33c17.15,6.65,32.47,13.43,49.11,21.06l41.81-20.13c6.04-2.91,13.26-.11,17.61,4.13l23.8,23.14c7.2,7,19.1,14.05,22.43,23.91,4.16,12.33-16.19,38.82-20.01,52.71l17.24,41.41c2.34,5.62,6.03,9.76,11.94,11.58l33.12,10.2c3.83,1.18,11.27,6.68,11.71,11,2.35,23.17,2.72,45.18-.02,68.09-.78,6.55-9.87,10.82-15.17,12.36l-38.13,11.1-20.69,50.74,19.86,40.52c1.61,3.29,2.91,10.7.17,13.44l-45.2,45.11c-6.7,6.69-16.12,6.57-24.24,2.55l-36.84-18.22-48.65,20.02-14.81,43.65c-1.98,5.84-8.51,9.36-14.44,9.4l-65.63.45.02.02h0ZM372.49,546.04c56.23-10.13,103.65-52.02,120.79-105.74,29.16-91.39-30.99-187.95-124.97-202.82-83.04-13.14-161.05,39.61-179.27,121.74-11.97,53.98,5.26,110.87,47.01,147.59,23.59,20.75,51.63,35.89,82.98,39.7,17.18,2.09,35.23,2.81,53.47-.47h-.01Z"/>
                     </svg>
-                </div>
+                </a>
                 <div>
-                    <h1 class="text-4xl font-black tracking-tighter leading-none uppercase">Sand Timer <span class="text-indigo-400">Lab</span></h1>
+                    <h1 class="text-4xl font-black tracking-tighter leading-none uppercase text-white">Sand Timer <span class="text-indigo-400">Lab</span></h1>
                     <div class="flex items-center gap-2 mt-2 opacity-40">
-                        <span class="text-[10px] font-black uppercase tracking-[0.3em]">Precision Flow Environment</span>
+                        <span class="text-[10px] font-black uppercase tracking-[0.3em] text-white">Precision Flow Environment</span>
                         <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
                     </div>
                 </div>
@@ -189,7 +184,7 @@
             <div class="flex flex-wrap items-center gap-4">
                 <div class="flex items-center gap-6 glass-card px-8 py-4 bg-indigo-900/10">
                     <div class="text-right">
-                        <div class="text-[10px] font-black opacity-30 uppercase tracking-widest mb-0.5">Trial Timer</div>
+                        <div class="text-[10px] font-black opacity-30 uppercase tracking-widest mb-0.5 text-white">Trial Timer</div>
                         <div id="timer-group" class="text-4xl font-mono font-black text-indigo-400 timer-glow flex items-center transition-colors">
                             <input type="number" id="timer-min" class="timer-input w-12 text-right" value="0" placeholder="0">
                             <span>:</span>
@@ -199,9 +194,9 @@
                         </div>
                     </div>
                     <button id="toggle-timer" class="w-16 h-16 rounded-3xl bg-indigo-600 text-white flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-xl shadow-indigo-900/50">
-                        <i data-lucide="play" class="w-8 h-8" id="timer-icon" fill="currentColor"></i>
+                        <i data-lucide="play" class="w-8 h-8 text-white" id="timer-icon" fill="currentColor"></i>
                     </button>
-                    <button id="reset-timer" class="p-2 opacity-30 hover:opacity-100 transition-all hover:rotate-180">
+                    <button id="reset-timer" class="p-2 opacity-30 hover:opacity-100 transition-all hover:rotate-180 text-white">
                         <i data-lucide="rotate-ccw" class="w-6 h-6"></i>
                     </button>
                 </div>
@@ -212,7 +207,7 @@
             <div class="glass-card p-6 h-full min-h-[450px]">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="font-black text-xl tracking-tighter flex items-center gap-2 text-indigo-400 uppercase">
-                        <i data-lucide="bar-chart-3"></i> Aperture Performance
+                        <i data-lucide="bar-chart-3" class="text-indigo-400"></i> Aperture Performance
                     </h2>
                 </div>
                 <div class="relative h-[320px] w-full">
@@ -226,36 +221,36 @@
                 <div class="flex flex-col md:flex-row gap-8">
                     <div class="md:w-64 space-y-6">
                         <section class="glass-card p-6 space-y-5">
-                            <h2 class="text-[11px] font-black opacity-40 uppercase tracking-[0.2em] flex items-center gap-2">
-                                <i data-lucide="layers" class="w-3 h-3"></i> Assets
+                            <h2 class="text-[11px] font-black opacity-40 uppercase tracking-[0.2em] flex items-center gap-2 text-white">
+                                <i data-lucide="layers" class="w-3 h-3 text-white"></i> Assets
                             </h2>
                             <div class="space-y-3">
-                                <div draggable="true" ondragstart="handleDragStart(event, 'small')" ontouchstart="handleTouchStart(event, 'small')" class="marble-source flex items-center justify-between p-4 bg-slate-800 rounded-2xl cursor-grab hover:bg-slate-700 transition-colors group">
+                                <div onclick="handleInventoryClick('small')" draggable="true" ondragstart="handleDragStart(event, 'small')" ontouchstart="handleTouchStart(event, 'small')" class="marble-source flex items-center justify-between p-4 bg-slate-800 rounded-2xl cursor-pointer hover:bg-slate-700 transition-colors group border border-transparent hover:border-indigo-500/30">
                                     <div class="flex items-center gap-4">
                                         <div class="w-5 h-5 bg-purple-500 rounded-full shadow-lg ring-4 ring-purple-500/20"></div>
-                                        <span class="font-black text-xs uppercase tracking-tight">Small</span>
+                                        <span class="font-black text-xs uppercase tracking-tight text-white">Small</span>
                                     </div>
-                                    <kbd class="px-2 py-0.5 rounded bg-slate-900 text-[9px] font-black opacity-50 border border-slate-700">1</kbd>
+                                    <kbd class="px-2 py-0.5 rounded bg-slate-900 text-[9px] font-black opacity-50 border border-slate-700 text-white">1</kbd>
                                 </div>
-                                <div draggable="true" ondragstart="handleDragStart(event, 'medium')" ontouchstart="handleTouchStart(event, 'medium')" class="marble-source flex items-center justify-between p-4 bg-slate-800 rounded-2xl cursor-grab hover:bg-slate-700 transition-colors group">
+                                <div onclick="handleInventoryClick('medium')" draggable="true" ondragstart="handleDragStart(event, 'medium')" ontouchstart="handleTouchStart(event, 'medium')" class="marble-source flex items-center justify-between p-4 bg-slate-800 rounded-2xl cursor-pointer hover:bg-slate-700 transition-colors group border border-transparent hover:border-indigo-500/30">
                                     <div class="flex items-center gap-4">
                                         <div class="w-8 h-8 bg-emerald-500 border-2 border-yellow-300 rounded-full shadow-lg ring-4 ring-emerald-500/20"></div>
-                                        <span class="font-black text-xs uppercase tracking-tight">Medium</span>
+                                        <span class="font-black text-xs uppercase tracking-tight text-white">Medium</span>
                                     </div>
-                                    <kbd class="px-2 py-0.5 rounded bg-slate-900 text-[9px] font-black opacity-50 border border-slate-700">2</kbd>
+                                    <kbd class="px-2 py-0.5 rounded bg-slate-900 text-[9px] font-black opacity-50 border border-slate-700 text-white">2</kbd>
                                 </div>
-                                <div draggable="true" ondragstart="handleDragStart(event, 'large')" ontouchstart="handleTouchStart(event, 'large')" class="marble-source flex items-center justify-between p-4 bg-slate-800 rounded-2xl cursor-grab hover:bg-slate-700 transition-colors group">
+                                <div onclick="handleInventoryClick('large')" draggable="true" ondragstart="handleDragStart(event, 'large')" ontouchstart="handleTouchStart(event, 'large')" class="marble-source flex items-center justify-between p-4 bg-slate-800 rounded-2xl cursor-pointer hover:bg-slate-700 transition-colors group border border-transparent hover:border-indigo-500/30">
                                     <div class="flex items-center gap-4">
                                         <div class="w-12 h-12 bg-slate-900 border-2 border-orange-500 rounded-full shadow-xl ring-4 ring-slate-900/20"></div>
-                                        <span class="font-black text-xs uppercase tracking-tight text-slate-200">Large</span>
+                                        <span class="font-black text-xs uppercase tracking-tight text-white text-slate-200">Large</span>
                                     </div>
-                                    <kbd class="px-2 py-0.5 rounded bg-slate-900 text-[9px] font-black opacity-50 border border-slate-700">3</kbd>
+                                    <kbd class="px-2 py-0.5 rounded bg-slate-900 text-[9px] font-black opacity-50 border border-slate-700 text-white">3</kbd>
                                 </div>
                             </div>
                         </section>
 
                         <section class="glass-card p-6 bg-red-900/10 border-red-500/20">
-                            <h2 class="text-[11px] font-black opacity-40 uppercase tracking-[0.2em] mb-4 text-center">Rod Aperture</h2>
+                            <h2 class="text-[11px] font-black opacity-40 uppercase tracking-[0.2em] mb-4 text-center text-white">Rod Aperture</h2>
                             <div id="rod-container" class="bg-red-700 p-5 rounded-2xl flex items-center justify-center gap-3 shadow-inner h-24 overflow-hidden"></div>
                         </section>
                     </div>
@@ -269,43 +264,45 @@
             <div class="lg:col-span-4 space-y-6">
                 <section class="glass-card p-8 space-y-6">
                     <div class="flex justify-between items-center">
-                        <h2 class="text-[11px] font-black opacity-40 uppercase tracking-[0.2em]">Trial Notes</h2>
+                        <h2 class="text-[11px] font-black opacity-40 uppercase tracking-[0.2em] text-white">Trial Notes</h2>
                         <div id="edit-indicator" class="hidden flex items-center gap-1.5 text-[10px] font-bold text-amber-400 uppercase bg-amber-900/20 px-2 py-1 rounded-lg">
-                            <i data-lucide="edit-3" class="w-3 h-3"></i> Edit Mode
+                            <i data-lucide="edit-3" class="w-3 h-3 text-amber-400"></i> Edit Mode
                         </div>
                     </div>
                     <div class="space-y-4">
-                        <textarea id="trial-comment" placeholder="Describe experimental results..." class="w-full h-32 p-5 rounded-3xl bg-slate-800 border-none focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm font-medium"></textarea>
+                        <div class="p-1 rounded-3xl bg-slate-800 border border-slate-700/50 shadow-inner">
+                            <textarea id="trial-comment" placeholder="Describe experimental results..." class="w-full h-32 p-5 rounded-2xl bg-transparent border-none focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all text-sm font-medium text-white resize-none"></textarea>
+                        </div>
                         
                         <div id="action-buttons" class="space-y-3">
                             <button id="save-run" class="w-full py-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black tracking-widest shadow-2xl shadow-indigo-900/50 transition-all flex items-center justify-center gap-3">
-                                <i data-lucide="save"></i> RECORD TRIAL
+                                <i data-lucide="save" class="text-white"></i> RECORD TRIAL
                             </button>
-                            <button id="cancel-edit" class="hidden w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2">
-                                <i data-lucide="x" class="w-3 h-3"></i> Cancel Edit
+                            <button id="cancel-edit" class="hidden w-full py-3 bg-slate-800/60 border border-slate-700/50 hover:bg-slate-700 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2">
+                                <i data-lucide="x" class="w-3 h-3 text-white"></i> Cancel Edit
                             </button>
                         </div>
 
                         <div class="pt-4 space-y-3 border-t border-slate-800">
                              <button id="btn-toggle-analytics" class="w-full py-3 bg-indigo-900/20 hover:bg-indigo-900/40 text-indigo-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2">
-                                <i data-lucide="bar-chart-2" class="w-3 h-3"></i> Toggle Analytics Mode
+                                <i data-lucide="bar-chart-2" class="w-3 h-3 text-indigo-400"></i> Toggle Analytics Mode
                             </button>
-                             <button id="btn-clear-current" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2">
-                                <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Clear Current Session
+                             <button id="btn-clear-current" class="w-full py-3 bg-slate-800/60 hover:bg-slate-700 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 border border-slate-700/30">
+                                <i data-lucide="rotate-ccw" class="w-3 h-3 text-slate-400"></i> Clear Current Session
                             </button>
-                             <button id="show-confirm-modal" class="w-full py-3 text-red-500/60 hover:text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-red-900/20 rounded-xl transition-colors flex items-center justify-center gap-2">
-                                <i data-lucide="trash-2" class="w-3 h-3"></i> Purge All History
+                             <button id="show-confirm-modal" class="w-full py-3 bg-red-900/10 hover:bg-red-900/20 text-red-500/60 hover:text-red-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 border border-red-900/20">
+                                <i data-lucide="trash-2" class="w-3 h-3 text-red-500"></i> Purge All History
                             </button>
                         </div>
                     </div>
                 </section>
                 
                 <div class="grid grid-cols-2 gap-4">
-                    <button id="btn-export" class="py-4 glass-card flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-900/20 transition-all">
-                        <i data-lucide="download" class="w-4 h-4"></i> Export
+                    <button id="btn-export" class="py-4 glass-card flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-900/20 transition-all text-white">
+                        <i data-lucide="download" class="w-4 h-4 text-white"></i> Export
                     </button>
-                    <button id="btn-import" class="py-4 glass-card flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-900/20 transition-all">
-                        <i data-lucide="upload" class="w-4 h-4"></i> Import
+                    <button id="btn-import" class="py-4 glass-card flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-900/20 transition-all text-white">
+                        <i data-lucide="upload" class="w-4 h-4 text-white"></i> Import
                     </button>
                     <input type="file" id="import-input" class="hidden" accept=".json">
                 </div>
@@ -315,15 +312,15 @@
         <section class="glass-card overflow-hidden">
             <div class="p-8 border-b border-slate-800 flex justify-between items-center bg-slate-800/20">
                 <div class="flex items-center gap-4">
-                    <h2 class="font-black text-2xl tracking-tighter text-indigo-100 uppercase">Results Log</h2>
+                    <h2 class="font-black text-2xl tracking-tighter text-indigo-100 uppercase text-white">Results Log</h2>
                     <span id="trial-count" class="px-5 py-1 bg-indigo-600 text-white text-[10px] font-black rounded-full uppercase tracking-widest">0 TRIALS</span>
                 </div>
-                <div class="hidden md:block text-[10px] font-black opacity-30 uppercase">Click row to edit trial details</div>
+                <div class="hidden md:block text-[10px] font-black opacity-30 uppercase text-white">Click row to edit trial details</div>
             </div>
             <div class="overflow-x-auto max-h-[600px] custom-scrollbar">
                 <table class="w-full text-left">
                     <thead>
-                        <tr class="text-[10px] font-black uppercase opacity-30 border-b border-slate-800">
+                        <tr class="text-[10px] font-black uppercase opacity-30 border-b border-slate-800 text-white">
                             <th class="px-8 py-5">Timestamp</th>
                             <th class="px-8 py-5">Configuration</th>
                             <th class="px-8 py-5 text-center">Hole</th>
@@ -332,7 +329,7 @@
                             <th class="px-8 py-5 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="log-body" class="divide-y divide-slate-800">
+                    <tbody id="log-body" class="divide-y divide-slate-800 text-white">
                         <tr><td colspan="6" class="px-8 py-20 text-center opacity-20 italic font-medium tracking-tight">No experimental data found.</td></tr>
                     </tbody>
                 </table>
@@ -348,7 +345,7 @@
         };
 
         const HOLE_SIZES = [14, 22, 30, 38, 46];
-        const STORAGE_KEY = 'sand_timer_lab_v9_persistent';
+        const STORAGE_KEY = 'sand_timer_lab_v12_persistent';
 
         let state = {
             grid: Array(9).fill(null),
@@ -372,9 +369,7 @@
 
         function saveToLocalStorage() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                logs: state.logs,
-                grid: state.grid,
-                selectedHole: state.selectedHole
+                logs: state.logs, grid: state.grid, selectedHole: state.selectedHole
             }));
             updateAnalytics();
         }
@@ -391,78 +386,24 @@
             initChart();
         }
 
-        function syncStateFromInputs() {
-            if (state.isRunning) return;
-            const mins = parseInt(minIn.value) || 0;
-            const secs = parseInt(secIn.value) || 0;
-            const cents = parseInt(centIn.value) || 0;
-            
-            const isNegative = mins < 0 || secIn.value.includes('-') || centIn.value.includes('-');
-            
-            const absMins = Math.abs(mins);
-            const absSecs = Math.abs(secs);
-            const absCents = Math.abs(cents);
-            
-            state.msTime = (absMins * 60000) + (absSecs * 1000) + (absCents * 10);
-            if (isNegative) state.msTime *= -1;
-            
+        function renderTimerValues(ms) {
+            const isNeg = ms < 0, absMs = Math.abs(ms);
+            const m = Math.floor(absMs / 60000), s = Math.floor((absMs % 60000) / 1000), c = Math.floor((absMs % 1000) / 10);
+            minIn.value = isNeg ? -m : m;
+            secIn.value = s.toString().padStart(2, '0');
+            centIn.value = c.toString().padStart(2, '0');
             updateTimerDisplayColor();
-            updateAnalytics();
         }
 
-        [minIn, secIn, centIn].forEach(input => {
-            input.addEventListener('input', () => {
-                if (state.isRunning) return;
-                syncStateFromInputs();
-            });
-            input.addEventListener('blur', () => {
-                if (state.isRunning) return;
-                renderTimerValues(state.msTime);
-            });
-        });
-
-        window.handleDragStart = (e, type, fromIndex = null) => {
-            e.dataTransfer.setData('type', type);
-            if (fromIndex !== null) e.dataTransfer.setData('fromIndex', fromIndex);
-        };
-
-        let touchData = { type: null, fromIndex: null };
-        const ghost = document.getElementById('touch-ghost');
-
-        function handleTouchStart(e, type, fromIndex = null) {
-            touchData.type = type;
-            touchData.fromIndex = fromIndex;
-            const marble = MARBLE_TYPES[type];
-            ghost.className = `${marble.class} ${marble.color} rounded-full fixed shadow-2xl block`;
-            const touch = e.touches[0];
-            ghost.style.left = touch.clientX + 'px';
-            ghost.style.top = touch.clientY + 'px';
-        }
-
-        window.addEventListener('touchmove', (e) => {
-            if (!touchData.type) return;
-            e.preventDefault();
-            const touch = e.touches[0];
-            ghost.style.left = touch.clientX + 'px';
-            ghost.style.top = touch.clientY + 'px';
-        }, { passive: false });
-
-        window.addEventListener('touchend', (e) => {
-            if (!touchData.type) return;
-            const touch = e.changedTouches[0];
-            const target = document.elementFromPoint(touch.clientX, touch.clientY);
-            const gridCell = target?.closest('.grid-cell');
-            if (gridCell) {
-                const idx = parseInt(gridCell.dataset.index);
-                if (touchData.fromIndex !== null) state.grid[touchData.fromIndex] = null;
-                state.grid[idx] = touchData.type;
-                state.selectedCell = idx;
-                saveToLocalStorage();
-                renderGrid();
+        function updateTimerDisplayColor() {
+            if (state.msTime < 0) {
+                timerGroup.classList.replace('text-indigo-400', 'text-amber-500');
+                timerGroup.classList.replace('timer-glow', 'timer-glow-neg');
+            } else {
+                timerGroup.classList.replace('text-amber-500', 'text-indigo-400');
+                timerGroup.classList.replace('timer-glow-neg', 'timer-glow');
             }
-            touchData.type = null; touchData.fromIndex = null;
-            ghost.style.display = 'none';
-        });
+        }
 
         function renderGrid() {
             const gridEl = document.getElementById('main-grid');
@@ -470,12 +411,11 @@
             state.grid.forEach((cell, idx) => {
                 const cellEl = document.createElement('div');
                 cellEl.dataset.index = idx;
-                cellEl.className = `grid-cell rounded-[1.5rem] md:rounded-[2rem] flex items-center justify-center cursor-pointer 
-                    ${state.selectedCell === idx ? 'selected-cell' : ''}`;
+                cellEl.className = `grid-cell rounded-[1.5rem] md:rounded-[2rem] flex items-center justify-center cursor-pointer ${state.selectedCell === idx ? 'selected-cell' : ''}`;
                 if (cell) {
-                    const marble = MARBLE_TYPES[cell];
+                    const m = MARBLE_TYPES[cell];
                     const marbleEl = document.createElement('div');
-                    marbleEl.className = `${marble.class} ${marble.color} rounded-full shadow-2xl cursor-grab transition-transform active:scale-95`;
+                    marbleEl.className = `${m.class} ${m.color} rounded-full shadow-2xl cursor-grab transition-all active:scale-95`;
                     marbleEl.draggable = true;
                     marbleEl.addEventListener('dragstart', (e) => handleDragStart(e, cell, idx));
                     marbleEl.addEventListener('touchstart', (e) => handleTouchStart(e, cell, idx));
@@ -490,12 +430,10 @@
                 cellEl.ondrop = (e) => {
                     e.preventDefault();
                     const type = e.dataTransfer.getData('type');
-                    const fromIndex = e.dataTransfer.getData('fromIndex');
-                    if (fromIndex !== "" && fromIndex !== null) state.grid[parseInt(fromIndex)] = null;
-                    state.grid[idx] = type;
-                    state.selectedCell = idx;
-                    saveToLocalStorage();
-                    renderGrid();
+                    const from = e.dataTransfer.getData('fromIndex');
+                    if (from !== "" && from !== null) state.grid[parseInt(from)] = null;
+                    state.grid[idx] = type; state.selectedCell = idx;
+                    saveToLocalStorage(); renderGrid();
                 };
                 gridEl.appendChild(cellEl);
             });
@@ -507,7 +445,7 @@
             HOLE_SIZES.forEach((size, idx) => {
                 const hole = document.createElement('button');
                 hole.className = `rod-hole-btn rounded-xl flex-shrink-0 ${state.selectedHole === idx ? 'active' : ''}`;
-                hole.style.width = `${size}px`; hole.style.height = `${size}px`;
+                hole.style.width = hole.style.height = `${size}px`;
                 hole.onclick = (e) => { e.stopPropagation(); state.selectedHole = idx; saveToLocalStorage(); renderRod(); };
                 rodEl.appendChild(hole);
             });
@@ -528,20 +466,11 @@
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        y: { 
-                            beginAtZero: true, 
-                            grid: { color: 'rgba(255,255,255,0.05)' },
-                            ticks: { color: '#64748b' },
-                            title: { display: true, text: 'Seconds', color: '#64748b' }
-                        },
-                        x: { 
-                            grid: { display: false },
-                            ticks: { color: '#64748b' }
-                        }
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+                        x: { grid: { display: false }, ticks: { color: '#64748b' } }
                     }
                 }
             });
@@ -550,17 +479,14 @@
 
         function updateAnalytics() {
             if (!labChart) return;
-            const sums = [0, 0, 0, 0, 0];
-            const counts = [0, 0, 0, 0, 0];
+            const sums = [0,0,0,0,0], counts = [0,0,0,0,0];
             state.logs.forEach(log => {
                 if (log.holeIndex !== null) {
-                    const timeSecs = parseTime(log.duration) / 1000;
-                    sums[log.holeIndex] += timeSecs;
+                    sums[log.holeIndex] += parseTime(log.duration) / 1000;
                     counts[log.holeIndex]++;
                 }
             });
-            const averages = sums.map((sum, i) => counts[i] > 0 ? (sum / counts[i]) : 0);
-            labChart.data.datasets[0].data = averages;
+            labChart.data.datasets[0].data = sums.map((s, i) => counts[i] > 0 ? (s / counts[i]) : 0);
             labChart.update();
         }
 
@@ -568,18 +494,15 @@
             const trial = state.logs.find(l => l.id === trialId);
             if (!trial) return;
             state.editingId = trial.id;
-            state.grid = [...trial.gridData];
-            state.selectedHole = trial.holeIndex;
-            state.selectedCell = null;
+            state.grid = [...trial.gridData]; state.selectedHole = trial.holeIndex;
             state.msTime = parseTime(trial.duration) || 0;
             renderTimerValues(state.msTime);
             document.getElementById('trial-comment').value = trial.comment || '';
             document.getElementById('edit-indicator').classList.remove('hidden');
             document.getElementById('cancel-edit').classList.remove('hidden');
-            document.getElementById('save-run').innerHTML = '<i data-lucide="check-circle"></i> Update Result';
+            document.getElementById('save-run').innerHTML = '<i data-lucide="check-circle"></i> Commit Changes';
             document.getElementById('save-run').classList.replace('bg-indigo-600', 'bg-amber-600');
-            renderGrid(); renderRod(); renderLogs();
-            lucide.createIcons();
+            renderGrid(); renderRod(); renderLogs(); lucide.createIcons();
         }
 
         function cancelEditing() {
@@ -588,14 +511,13 @@
             document.getElementById('cancel-edit').classList.add('hidden');
             document.getElementById('save-run').innerHTML = '<i data-lucide="save"></i> Record Trial';
             document.getElementById('save-run').classList.replace('bg-amber-600', 'bg-indigo-600');
-            resetStation();
-            lucide.createIcons();
+            resetStation(); lucide.createIcons();
         }
 
-        function deleteTrial(trialId, event) {
-            event.stopPropagation();
-            if (state.editingId === trialId) cancelEditing();
-            state.logs = state.logs.filter(l => l.id !== trialId);
+        function deleteTrial(id, ev) {
+            ev.stopPropagation();
+            if (state.editingId === id) cancelEditing();
+            state.logs = state.logs.filter(l => l.id !== id);
             saveToLocalStorage(); renderLogs();
         }
 
@@ -603,7 +525,7 @@
             const logBody = document.getElementById('log-body');
             document.getElementById('trial-count').innerText = `${state.logs.length} TRIALS`;
             if (state.logs.length === 0) {
-                logBody.innerHTML = '<tr><td colspan="6" class="px-8 py-20 text-center opacity-20 italic">No experimental data found.</td></tr>';
+                logBody.innerHTML = '<tr><td colspan="6" class="px-8 py-20 text-center opacity-20 italic font-medium tracking-tight">No experimental data found.</td></tr>';
                 return;
             }
             logBody.innerHTML = state.logs.map(log => `
@@ -614,9 +536,7 @@
                     <td class="px-8 py-6 text-sm font-medium opacity-50 max-w-sm truncate">${log.comment || '—'}</td>
                     <td class="px-8 py-6 text-right font-mono font-black text-indigo-400 text-lg">${log.duration}</td>
                     <td class="px-8 py-6 text-right">
-                        <button onclick="deleteTrial(${log.id}, event)" class="p-2 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
+                        <button onclick="deleteTrial(${log.id}, event)" class="p-2 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors"><i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i></button>
                     </td>
                 </tr>
             `).join('');
@@ -625,45 +545,14 @@
 
         function renderAll() { renderGrid(); renderRod(); renderLogs(); renderTimerValues(state.msTime); }
 
-        function renderTimerValues(totalMs) {
-            const isNeg = totalMs < 0;
-            const absMs = Math.abs(totalMs);
-            const mins = Math.floor(absMs / 60000);
-            const secs = Math.floor((absMs % 60000) / 1000);
-            const cents = Math.floor((absMs % 1000) / 10);
-            
-            minIn.value = isNeg ? -mins : mins;
-            secIn.value = secs.toString().padStart(2, '0');
-            centIn.value = cents.toString().padStart(2, '0');
-            updateTimerDisplayColor();
-        }
-
-        function updateTimerDisplayColor() {
-            if (state.msTime < 0) {
-                timerGroup.classList.replace('text-indigo-400', 'text-amber-500');
-                timerGroup.classList.replace('timer-glow', 'timer-glow-neg');
-            } else {
-                timerGroup.classList.replace('text-amber-500', 'text-indigo-400');
-                timerGroup.classList.replace('timer-glow-neg', 'timer-glow');
-            }
-        }
-
-        function parseTime(timeStr) {
+        function parseTime(str) {
             try {
-                const isNeg = timeStr.startsWith('-');
-                const cleanStr = isNeg ? timeStr.substring(1) : timeStr;
-                const parts = cleanStr.split(/[:.]/);
+                const neg = str.startsWith('-'), clean = neg ? str.substring(1) : str, p = clean.split(/[:.]/);
                 let ms = 0;
-                if (parts.length === 3) {
-                    ms += parseInt(parts[0]) * 60000;
-                    ms += parseInt(parts[1]) * 1000;
-                    ms += parseInt(parts[2]) * 10;
-                } else if (parts.length === 2) {
-                    ms += parseInt(parts[0]) * 1000;
-                    ms += parseInt(parts[1]) * 10;
-                }
-                return isNeg ? -ms : ms;
-            } catch (e) { return 0; }
+                if (p.length === 3) ms = (parseInt(p[0])*60000) + (parseInt(p[1])*1000) + (parseInt(p[2])*10);
+                else if (p.length === 2) ms = (parseInt(p[0])*1000) + (parseInt(p[1])*10);
+                return neg ? -ms : ms;
+            } catch(e) { return 0; }
         }
 
         function updateTimer() {
@@ -674,42 +563,86 @@
         }
 
         function resetStation() {
-            state.isRunning = false; state.msTime = 0;
-            state.grid = Array(9).fill(null);
+            state.isRunning = false; state.msTime = 0; state.grid = Array(9).fill(null);
             state.selectedHole = null; state.selectedCell = null;
-            cancelAnimationFrame(state.timerId);
-            renderTimerValues(0);
+            cancelAnimationFrame(state.timerId); renderTimerValues(0);
             document.getElementById('toggle-timer').classList.remove('timer-active');
             document.getElementById('timer-icon').setAttribute('data-lucide', 'play');
             minIn.disabled = secIn.disabled = centIn.disabled = false;
             renderGrid(); renderRod(); lucide.createIcons(); saveToLocalStorage();
         }
 
+        function syncStateFromInputs() {
+            if (state.isRunning) return;
+            const mVal = minIn.value, sVal = secIn.value, cVal = centIn.value;
+            const isNegative = mVal.startsWith('-') || sVal.startsWith('-') || cVal.startsWith('-');
+            const mins = Math.abs(parseInt(mVal) || 0), secs = Math.abs(parseInt(sVal) || 0), cents = Math.abs(parseInt(cVal) || 0);
+            state.msTime = (mins * 60000) + (secs * 1000) + (cents * 10);
+            if (isNegative) state.msTime *= -1;
+            updateTimerDisplayColor(); updateAnalytics();
+        }
+
+        function handleInventoryClick(type) {
+            if (state.selectedCell !== null) {
+                state.grid[state.selectedCell] = type;
+                saveToLocalStorage();
+                renderGrid();
+            }
+        }
+
+        window.handleDragStart = (e, type, fromIndex = null) => {
+            e.dataTransfer.setData('type', type);
+            if (fromIndex !== null) e.dataTransfer.setData('fromIndex', fromIndex);
+        };
+
+        let touchData = { type: null, fromIndex: null };
+        const ghost = document.getElementById('touch-ghost');
+        function handleTouchStart(e, type, fromIndex = null) {
+            touchData.type = type; touchData.fromIndex = fromIndex;
+            const m = MARBLE_TYPES[type];
+            ghost.className = `${m.class} ${m.color} rounded-full fixed shadow-2xl block`;
+            ghost.style.left = e.touches[0].clientX + 'px'; ghost.style.top = e.touches[0].clientY + 'px';
+        }
+        window.addEventListener('touchmove', (e) => {
+            if (!touchData.type) return;
+            e.preventDefault(); ghost.style.left = e.touches[0].clientX + 'px'; ghost.style.top = e.touches[0].clientY + 'px';
+        }, { passive: false });
+        window.addEventListener('touchend', (e) => {
+            if (!touchData.type) return;
+            const touch = e.changedTouches[0];
+            const cell = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.grid-cell');
+            if (cell) {
+                const idx = parseInt(cell.dataset.index);
+                if (touchData.fromIndex !== null) state.grid[touchData.fromIndex] = null;
+                state.grid[idx] = touchData.type; state.selectedCell = idx;
+                saveToLocalStorage(); renderGrid();
+            }
+            touchData.type = null; touchData.fromIndex = null; ghost.style.display = 'none';
+        });
+
+        [minIn, secIn, centIn].forEach(input => {
+            input.addEventListener('input', syncStateFromInputs);
+            input.addEventListener('blur', () => { if (!state.isRunning) renderTimerValues(state.msTime); });
+        });
+
         document.getElementById('toggle-timer').onclick = () => {
             state.isRunning = !state.isRunning;
-            const btn = document.getElementById('toggle-timer');
-            const icon = document.getElementById('timer-icon');
+            const btn = document.getElementById('toggle-timer'), icon = document.getElementById('timer-icon');
             if (state.isRunning) {
                 state.startTime = Date.now() - state.msTime;
-                icon.setAttribute('data-lucide', 'square');
-                btn.classList.add('timer-active');
-                minIn.disabled = secIn.disabled = centIn.disabled = true;
-                updateTimer();
+                icon.setAttribute('data-lucide', 'square'); btn.classList.add('timer-active');
+                minIn.disabled = secIn.disabled = centIn.disabled = true; updateTimer();
             } else {
                 cancelAnimationFrame(state.timerId);
-                icon.setAttribute('data-lucide', 'play');
-                btn.classList.remove('timer-active');
-                minIn.disabled = secIn.disabled = centIn.disabled = false;
-                renderTimerValues(state.msTime);
+                icon.setAttribute('data-lucide', 'play'); btn.classList.remove('timer-active');
+                minIn.disabled = secIn.disabled = centIn.disabled = false; renderTimerValues(state.msTime);
             }
             lucide.createIcons();
         };
 
         document.getElementById('reset-timer').onclick = () => {
-            state.isRunning = false; state.msTime = 0;
-            cancelAnimationFrame(state.timerId);
-            renderTimerValues(0);
-            minIn.disabled = secIn.disabled = centIn.disabled = false;
+            state.isRunning = false; state.msTime = 0; cancelAnimationFrame(state.timerId);
+            renderTimerValues(0); minIn.disabled = secIn.disabled = centIn.disabled = false;
             document.getElementById('toggle-timer').classList.remove('timer-active');
             document.getElementById('timer-icon').setAttribute('data-lucide', 'play');
             lucide.createIcons();
@@ -718,35 +651,14 @@
         document.getElementById('save-run').onclick = () => {
             const summary = state.grid.map((item, i) => (item ? `${MARBLE_TYPES[item].size}@${i + 1}` : null)).filter(Boolean).join(', ') || 'Empty';
             const comment = document.getElementById('trial-comment').value;
-            const isNeg = state.msTime < 0;
-            const absTime = Math.abs(state.msTime);
-            const duration = (isNeg ? '-' : '') + `${Math.floor(absTime/60000)}:${Math.floor((absTime%60000)/1000).toString().padStart(2,'0')}.${Math.floor((absTime%1000)/10).toString().padStart(2,'0')}`;
-
+            const isNeg = state.msTime < 0, absMs = Math.abs(state.msTime);
+            const duration = (isNeg ? '-' : '') + `${Math.floor(absMs/60000)}:${Math.floor((absMs%60000)/1000).toString().padStart(2,'0')}.${Math.floor((absMs%1000)/10).toString().padStart(2,'0')}`;
             if (state.editingId) {
-                const index = state.logs.findIndex(l => l.id === state.editingId);
-                if (index !== -1) {
-                    state.logs[index] = {
-                        ...state.logs[index],
-                        gridSummary: summary,
-                        gridData: [...state.grid],
-                        holeIndex: state.selectedHole,
-                        holeLabel: state.selectedHole !== null ? `H${state.selectedHole + 1}` : '—',
-                        duration: duration,
-                        comment: comment
-                    };
-                }
+                const i = state.logs.findIndex(l => l.id === state.editingId);
+                if (i !== -1) state.logs[i] = { ...state.logs[i], gridSummary: summary, gridData: [...state.grid], holeIndex: state.selectedHole, holeLabel: state.selectedHole !== null ? `H${state.selectedHole + 1}` : '—', duration, comment };
                 cancelEditing();
             } else {
-                state.logs.unshift({
-                    id: Date.now(),
-                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-                    gridSummary: summary,
-                    gridData: [...state.grid],
-                    holeIndex: state.selectedHole,
-                    holeLabel: state.selectedHole !== null ? `H${state.selectedHole + 1}` : '—',
-                    duration: duration,
-                    comment: comment
-                });
+                state.logs.unshift({ id: Date.now(), timestamp: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}), gridSummary: summary, gridData: [...state.grid], holeIndex: state.selectedHole, holeLabel: state.selectedHole !== null ? `H${state.selectedHole + 1}` : '—', duration, comment });
                 resetStation();
             }
             saveToLocalStorage(); renderLogs();
@@ -759,7 +671,6 @@
             if (state.analyticsOpen) updateAnalytics();
         };
         document.getElementById('btn-clear-current').onclick = resetStation;
-
         const modal = document.getElementById('confirm-modal');
         document.getElementById('show-confirm-modal').onclick = () => modal.classList.replace('hidden', 'flex');
         document.getElementById('modal-cancel').onclick = () => modal.classList.replace('flex', 'hidden');
@@ -769,10 +680,8 @@
 
         document.getElementById('btn-export').onclick = () => {
             const blob = new Blob([JSON.stringify(state.logs, null, 2)], {type : 'application/json'});
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-            a.download = `SandTimerLab_Data_${new Date().toISOString().slice(0,10)}.json`; a.click();
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `SandTimerLab_Data.json`; a.click();
         };
-
         document.getElementById('btn-import').onclick = () => document.getElementById('import-input').click();
         document.getElementById('import-input').onchange = (e) => {
             const reader = new FileReader();
@@ -781,7 +690,7 @@
                     const data = JSON.parse(ev.target.result);
                     state.logs = Array.isArray(data) ? [...data, ...state.logs] : state.logs;
                     saveToLocalStorage(); renderLogs();
-                } catch(err) { alert("Import Failed."); }
+                } catch(err) { alert("Invalid JSON."); }
             };
             reader.readAsText(e.target.files[0]);
         };
