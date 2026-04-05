@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg-page: #0f172a;
@@ -140,6 +142,16 @@
             max-height: 600px;
             margin-bottom: 2rem;
         }
+
+        .status-pill {
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+        .status-online { background: #059669; color: white; }
+        .status-offline { background: #4b5563; color: white; }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8 custom-scrollbar">
@@ -153,7 +165,7 @@
             </div>
             <div class="text-center space-y-2">
                 <h3 class="text-xl font-black uppercase tracking-tight text-white">Purge All History?</h3>
-                <p class="text-sm text-slate-400">This will permanently delete all recorded results in your log.</p>
+                <p class="text-sm text-slate-400">This will permanently delete all recorded results in your log and Supabase.</p>
             </div>
             <div class="flex gap-3 pt-2">
                 <button id="modal-cancel" class="flex-1 py-4 bg-slate-800 hover:bg-slate-700 font-bold rounded-2xl transition-colors text-white">Cancel</button>
@@ -176,7 +188,7 @@
                     <h1 class="text-4xl font-black tracking-tighter leading-none uppercase text-white">Sand Timer <span class="text-indigo-400">Lab</span></h1>
                     <div class="flex items-center gap-2 mt-2 opacity-40">
                         <span class="text-[10px] font-black uppercase tracking-[0.3em] text-white">Precision Flow Environment</span>
-                        <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
+                        <div id="sync-status" class="status-pill status-offline">Supabase Offline</div>
                     </div>
                 </div>
             </div>
@@ -338,6 +350,27 @@
     </div>
 
     <script>
+        // --- Supabase Config ---
+        const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY'; 
+        
+        let supabaseClient = null;
+
+        // More robust placeholder detection
+        const isPlaceholder = (str) => {
+            if (!str) return true;
+            const s = str.toLowerCase();
+            return s.includes('your_project_id') || s.includes('your_anon_key') || s === '';
+        };
+
+        if (!isPlaceholder(SUPABASE_URL) && !isPlaceholder(SUPABASE_ANON_KEY)) {
+            try {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            } catch (e) {
+                console.error("Supabase Initialization Failed:", e);
+            }
+        }
+
         const MARBLE_TYPES = {
             small: { size: 'S', color: 'bg-purple-500 ring-4 ring-purple-500/20', class: 'marble-small' },
             medium: { size: 'M', color: 'bg-emerald-500 border-2 border-yellow-300 ring-4 ring-emerald-500/20', class: 'marble-medium' },
@@ -366,6 +399,88 @@
         const secIn = document.getElementById('timer-sec');
         const centIn = document.getElementById('timer-cent');
         const timerGroup = document.getElementById('timer-group');
+        const syncStatus = document.getElementById('sync-status');
+
+        function updateSyncStatus(isOnline) {
+            if (isOnline) {
+                syncStatus.innerText = 'Supabase Online';
+                syncStatus.classList.replace('status-offline', 'status-online');
+            } else {
+                syncStatus.innerText = 'Supabase Offline';
+                syncStatus.classList.replace('status-online', 'status-offline');
+            }
+        }
+
+        async function syncToSupabase(log) {
+            if (!supabaseClient) return;
+            try {
+                const { error } = await supabaseClient
+                    .from('trials')
+                    .upsert({
+                        id: log.id,
+                        timestamp: log.timestamp,
+                        grid_summary: log.gridSummary,
+                        grid_data: log.gridData,
+                        hole_index: log.holeIndex,
+                        hole_label: log.holeLabel,
+                        duration: log.duration,
+                        comment: log.comment
+                    });
+                if (error) console.error('Supabase Sync Error:', error);
+                else updateSyncStatus(true);
+            } catch (e) { 
+                console.error('Supabase Network Error:', e); 
+                updateSyncStatus(false);
+            }
+        }
+
+        async function deleteFromSupabase(id) {
+            if (!supabaseClient) return;
+            try {
+                const { error } = await supabaseClient.from('trials').delete().eq('id', id);
+                if (error) console.error('Supabase Delete Error:', error);
+            } catch (e) {
+                console.error('Supabase Network Error during Delete:', e);
+            }
+        }
+
+        async function fetchFromSupabase() {
+            if (!supabaseClient) {
+                console.info("Supabase placeholders detected. Data is local-only.");
+                return;
+            }
+            try {
+                const { data, error } = await supabaseClient
+                    .from('trials')
+                    .select('*')
+                    .order('id', { ascending: false });
+                
+                if (error) throw error;
+                if (data) {
+                    state.logs = data.map(d => ({
+                        id: d.id,
+                        timestamp: d.timestamp,
+                        gridSummary: d.grid_summary,
+                        gridData: d.grid_data,
+                        holeIndex: d.hole_index,
+                        holeLabel: d.hole_label,
+                        duration: d.duration,
+                        comment: d.comment
+                    }));
+                    renderLogs();
+                    updateAnalytics();
+                    updateSyncStatus(true);
+                }
+            } catch (e) {
+                // Handle "Load failed" gracefully by explaining likely causes in log
+                if (e.message && e.message.includes('Load failed')) {
+                    console.error('Supabase Fetch Error: Network request failed. Check your SUPABASE_URL and ensure the database is active.');
+                } else {
+                    console.error('Supabase Fetch Error:', e);
+                }
+                updateSyncStatus(false);
+            }
+        }
 
         function saveToLocalStorage() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -374,7 +489,7 @@
             updateAnalytics();
         }
 
-        function loadFromLocalStorage() {
+        async function loadData() {
             const saved = localStorage.getItem(STORAGE_KEY);
             if (saved) {
                 const parsed = JSON.parse(saved);
@@ -384,6 +499,7 @@
             }
             renderAll();
             initChart();
+            await fetchFromSupabase();
         }
 
         function renderTimerValues(ms) {
@@ -514,10 +630,11 @@
             resetStation(); lucide.createIcons();
         }
 
-        function deleteTrial(id, ev) {
+        async function deleteTrial(id, ev) {
             ev.stopPropagation();
             if (state.editingId === id) cancelEditing();
             state.logs = state.logs.filter(l => l.id !== id);
+            await deleteFromSupabase(id);
             saveToLocalStorage(); renderLogs();
         }
 
@@ -648,20 +765,38 @@
             lucide.createIcons();
         };
 
-        document.getElementById('save-run').onclick = () => {
+        document.getElementById('save-run').onclick = async () => {
             const summary = state.grid.map((item, i) => (item ? `${MARBLE_TYPES[item].size}@${i + 1}` : null)).filter(Boolean).join(', ') || 'Empty';
             const comment = document.getElementById('trial-comment').value;
             const isNeg = state.msTime < 0, absMs = Math.abs(state.msTime);
             const duration = (isNeg ? '-' : '') + `${Math.floor(absMs/60000)}:${Math.floor((absMs%60000)/1000).toString().padStart(2,'0')}.${Math.floor((absMs%1000)/10).toString().padStart(2,'0')}`;
+            
+            let logEntry;
             if (state.editingId) {
                 const i = state.logs.findIndex(l => l.id === state.editingId);
-                if (i !== -1) state.logs[i] = { ...state.logs[i], gridSummary: summary, gridData: [...state.grid], holeIndex: state.selectedHole, holeLabel: state.selectedHole !== null ? `H${state.selectedHole + 1}` : '—', duration, comment };
+                if (i !== -1) {
+                    state.logs[i] = { ...state.logs[i], gridSummary: summary, gridData: [...state.grid], holeIndex: state.selectedHole, holeLabel: state.selectedHole !== null ? `H${state.selectedHole + 1}` : '—', duration, comment };
+                    logEntry = state.logs[i];
+                }
                 cancelEditing();
             } else {
-                state.logs.unshift({ id: Date.now(), timestamp: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}), gridSummary: summary, gridData: [...state.grid], holeIndex: state.selectedHole, holeLabel: state.selectedHole !== null ? `H${state.selectedHole + 1}` : '—', duration, comment });
+                logEntry = { 
+                    id: Date.now(), 
+                    timestamp: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}), 
+                    gridSummary: summary, 
+                    gridData: [...state.grid], 
+                    holeIndex: state.selectedHole, 
+                    holeLabel: state.selectedHole !== null ? `H${state.selectedHole + 1}` : '—', 
+                    duration, 
+                    comment 
+                };
+                state.logs.unshift(logEntry);
                 resetStation();
             }
-            saveToLocalStorage(); renderLogs();
+            
+            await syncToSupabase(logEntry);
+            saveToLocalStorage(); 
+            renderLogs();
         };
 
         document.getElementById('cancel-edit').onclick = cancelEditing;
@@ -674,7 +809,12 @@
         const modal = document.getElementById('confirm-modal');
         document.getElementById('show-confirm-modal').onclick = () => modal.classList.replace('hidden', 'flex');
         document.getElementById('modal-cancel').onclick = () => modal.classList.replace('flex', 'hidden');
-        document.getElementById('modal-confirm').onclick = () => {
+        document.getElementById('modal-confirm').onclick = async () => {
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('trials').delete().neq('id', 0); // Delete all
+                } catch(e) { console.error('Supabase Delete All Failed:', e); }
+            }
             state.logs = []; resetStation(); saveToLocalStorage(); renderLogs(); modal.classList.replace('flex', 'hidden');
         };
 
@@ -685,11 +825,16 @@
         document.getElementById('btn-import').onclick = () => document.getElementById('import-input').click();
         document.getElementById('import-input').onchange = (e) => {
             const reader = new FileReader();
-            reader.onload = (ev) => {
+            reader.onload = async (ev) => {
                 try {
                     const data = JSON.parse(ev.target.result);
-                    state.logs = Array.isArray(data) ? [...data, ...state.logs] : state.logs;
-                    saveToLocalStorage(); renderLogs();
+                    if (Array.isArray(data)) {
+                        for (const log of data) {
+                             await syncToSupabase(log);
+                        }
+                        state.logs = [...data, ...state.logs];
+                        saveToLocalStorage(); renderLogs();
+                    }
                 } catch(err) { alert("Invalid JSON."); }
             };
             reader.readAsText(e.target.files[0]);
@@ -721,8 +866,8 @@
         });
 
         document.body.onclick = (e) => { if (e.target.tagName === 'BODY' || e.target.id === 'main-grid') { state.selectedCell = null; renderGrid(); } };
-        loadFromLocalStorage();
+        loadData();
         lucide.createIcons();
     </script>
 </body>
-</html>
+</html>eof
