@@ -1,17 +1,20 @@
-create table if not exists public.app_config (
-  id uuid default gen_random_uuid() primary key,
-  key text unique not null,
-  value text not null
+create table if not exists public.trials (
+  id bigint primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  timestamp text not null,
+  grid_summary text,
+  grid_data jsonb,
+  hole_index integer,
+  hole_label text,
+  duration text not null,
+  comment text
 );
 
-alter table public.app_config enable row level security;
+alter table public.trials enable row level security;
 
-drop policy if exists "Allow public read app_config" on public.app_config;
+drop policy if exists "Enable access for all users" on public.trials;
 
-create policy "Allow public read app_config" 
-on public.app_config for select 
-using (true);
-
-insert into public.app_config (key, value)
-values ('lab_password_hash', '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4')
-on conflict (key) do nothing;
+create policy "Enable access for all users" 
+on public.trials for all 
+using (true) 
+with check (true);
