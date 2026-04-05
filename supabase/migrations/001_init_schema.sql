@@ -12,6 +12,8 @@ create table if not exists public.trials (
 
 alter table public.trials enable row level security;
 
+drop policy if exists "Enable access for all users" on public.trials;
+
 create policy "Enable access for all users" 
 on public.trials for all 
 using (true) 
