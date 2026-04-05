@@ -144,11 +144,13 @@
         }
 
         .status-pill {
-            padding: 2px 8px;
+            padding: 4px 12px;
             border-radius: 9999px;
             font-size: 10px;
             font-weight: 800;
             text-transform: uppercase;
+            display: inline-block;
+            white-space: nowrap;
         }
         .status-online { background: #059669; color: white; }
         .status-offline { background: #4b5563; color: white; }
@@ -174,7 +176,7 @@
         </div>
     </div>
 
-    <div class="max-w-6xl mx-auto space-y-8">
+    <div id="main-content" class="max-w-6xl mx-auto space-y-8 transition-all duration-700">
         
         <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div class="flex items-center gap-6">
@@ -186,9 +188,9 @@
                 </a>
                 <div>
                     <h1 class="text-4xl font-black tracking-tighter leading-none uppercase text-white">Sand Timer <span class="text-indigo-400">Lab</span></h1>
-                    <div class="flex items-center gap-2 mt-2 opacity-40">
+                    <div class="flex flex-col items-start gap-1 mt-2 opacity-40">
                         <span class="text-[10px] font-black uppercase tracking-[0.3em] text-white">Precision Flow Environment</span>
-                        <div id="sync-status" class="status-pill status-offline">Supabase Offline</div>
+                        <div id="sync-status" class="status-pill status-offline">Changes not saved</div>
                     </div>
                 </div>
             </div>
@@ -403,10 +405,10 @@
 
         function updateSyncStatus(isOnline) {
             if (isOnline) {
-                syncStatus.innerText = 'Supabase Online';
+                syncStatus.innerText = 'Synced';
                 syncStatus.classList.replace('status-offline', 'status-online');
             } else {
-                syncStatus.innerText = 'Supabase Offline';
+                syncStatus.innerText = 'Changes not saved';
                 syncStatus.classList.replace('status-online', 'status-offline');
             }
         }
@@ -426,8 +428,12 @@
                         duration: log.duration,
                         comment: log.comment
                     });
-                if (error) console.error('Supabase Sync Error:', error);
-                else updateSyncStatus(true);
+                if (error) {
+                    console.error('Supabase Sync Error:', error);
+                    updateSyncStatus(false);
+                } else {
+                    updateSyncStatus(true);
+                }
             } catch (e) { 
                 console.error('Supabase Network Error:', e); 
                 updateSyncStatus(false);
@@ -438,17 +444,18 @@
             if (!supabaseClient) return;
             try {
                 const { error } = await supabaseClient.from('trials').delete().eq('id', id);
-                if (error) console.error('Supabase Delete Error:', error);
+                if (error) {
+                    console.error('Supabase Delete Error:', error);
+                    updateSyncStatus(false);
+                }
             } catch (e) {
                 console.error('Supabase Network Error during Delete:', e);
+                updateSyncStatus(false);
             }
         }
 
         async function fetchFromSupabase() {
-            if (!supabaseClient) {
-                console.info("Supabase placeholders detected. Data is local-only.");
-                return;
-            }
+            if (!supabaseClient) return;
             try {
                 const { data, error } = await supabaseClient
                     .from('trials')
@@ -472,12 +479,7 @@
                     updateSyncStatus(true);
                 }
             } catch (e) {
-                // Handle "Load failed" gracefully by explaining likely causes in log
-                if (e.message && e.message.includes('Load failed')) {
-                    console.error('Supabase Fetch Error: Network request failed. Check your SUPABASE_URL and ensure the database is active.');
-                } else {
-                    console.error('Supabase Fetch Error:', e);
-                }
+                console.error('Supabase Fetch Error:', e);
                 updateSyncStatus(false);
             }
         }
@@ -870,4 +872,4 @@
         lucide.createIcons();
     </script>
 </body>
-</html>eof
+</html>
