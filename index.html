@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -152,9 +151,58 @@
         }
         .status-online { background: #059669; color: white; }
         .status-offline { background: #4b5563; color: white; }
+
+        /* Auth Styles */
+        #auth-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-page);
+        }
+        .pin-input {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            width: 3.5rem;
+            height: 4.5rem;
+            font-size: 2rem;
+            font-weight: 900;
+            text-align: center;
+            border-radius: 1rem;
+            color: white;
+            transition: all 0.2s;
+        }
+        .pin-input:focus {
+            border-color: var(--accent);
+            outline: none;
+            box-shadow: 0 0 15px rgba(129, 140, 248, 0.3);
+        }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8 custom-scrollbar">
+
+    <div id="auth-overlay">
+        <div class="max-w-md w-full px-6 text-center space-y-8 animate-in fade-in zoom-in duration-500">
+            <div class="flex justify-center">
+                 <svg viewBox="0 0 700 800" class="w-20 h-20 text-indigo-400 fill-current drop-shadow-[0_0_15px_rgba(129,140,248,0.4)]">
+                    <path d="M386.99,758.16l-32.5,18.39c-9.19,5.2-17.22,3.66-26.1-1.56l-212.56-124.94-97.59-57.79c-5.17-3.03-10.65-7.19-15.56-12.92-.19-.22-.37-.46-.54-.7h0c-.92-1.34-1.42-2.92-1.42-4.55l-.1-359.61c0-.62-.09-1.24-.22-1.85-1.5-7.05,1.23-13.41,7.53-17.22l99.7-60.38L330.11,3.96c5.7-3.36,12.79-5.44,18.55-2.69,12.37,5.91,22.82,11.89,34.74,18.9l212.4,124.99,81.93,49.64c4.41,2.67,7.38,9.18,7.44,14.09l.93,81.49.39,279.84c0,3.75-1.26,7.41-3.69,10.26-3.63,4.23-8.17,7.67-12.66,10.38l-42.13,25.48-241.02,141.81h0ZM656.19,564.85l.43-204.03.25-102.65-.93-35.51c-.15-5.63-2.78-9.47-7.96-12.52l-201.14-118.53-103.03-59.64c-6.09,2.49-10.74,4.61-16.62,8.08L30.41,215.29l-.45,197.89c-.5,6.61-.6,11.7-.13,18.06l.02,133.73,313.32,183.59,39.77-22.91,273.24-160.79h.01Z"/>
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-3xl font-black uppercase tracking-tighter text-white">Encrypted Access</h2>
+                <p class="text-slate-400 mt-2 text-sm font-medium">Please enter the 4-digit laboratory pin.</p>
+            </div>
+            <div id="pin-container" class="flex justify-center gap-3">
+                <input type="password" maxlength="1" class="pin-input" data-index="0" inputmode="numeric">
+                <input type="password" maxlength="1" class="pin-input" data-index="1" inputmode="numeric">
+                <input type="password" maxlength="1" class="pin-input" data-index="2" inputmode="numeric">
+                <input type="password" maxlength="1" class="pin-input" data-index="3" inputmode="numeric">
+            </div>
+            <p id="auth-error" class="text-red-500 text-xs font-black uppercase tracking-widest hidden">Access Denied: Invalid Pin</p>
+        </div>
+    </div>
 
     <div id="touch-ghost" class="rounded-full shadow-2xl"></div>
 
@@ -174,7 +222,7 @@
         </div>
     </div>
 
-    <div class="max-w-6xl mx-auto space-y-8">
+    <div id="main-content" class="max-w-6xl mx-auto space-y-8 blur-lg pointer-events-none transition-all duration-700">
         
         <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div class="flex items-center gap-6">
@@ -371,6 +419,95 @@
             }
         }
 
+        // --- Auth Logic ---
+        const COOKIE_NAME = 'lab_session_auth';
+        
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        function setAuthCookie() {
+            const date = new Date();
+            date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days
+            document.cookie = `${COOKIE_NAME}=true; expires=${date.toUTCString()}; path=/; SameSite=Strict`;
+        }
+
+        function getAuthCookie() {
+            const name = COOKIE_NAME + "=";
+            const decodedCookie = decodeURIComponent(document.cookie);
+            const ca = decodedCookie.split(';');
+            for(let i = 0; i <ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') c = c.substring(1);
+                if (c.indexOf(name) == 0) return c.substring(name.length, c.length);
+            }
+            return "";
+        }
+
+        async function verifyPin() {
+            const inputs = document.querySelectorAll('.pin-input');
+            const pin = Array.from(inputs).map(i => i.value).join('');
+            if (pin.length < 4) return;
+
+            if (!supabaseClient) {
+                alert("Supabase not connected. Authentication unavailable.");
+                return;
+            }
+
+            const hashedInput = await sha256(pin);
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('app_config')
+                    .select('value')
+                    .eq('key', 'lab_password_hash')
+                    .single();
+
+                if (data && data.value === hashedInput) {
+                    unlockApp();
+                } else {
+                    document.getElementById('auth-error').classList.remove('hidden');
+                    inputs.forEach(i => {
+                        i.value = '';
+                        i.classList.add('border-red-500');
+                    });
+                    inputs[0].focus();
+                }
+            } catch (err) {
+                console.error("Auth Fetch Error:", err);
+            }
+        }
+
+        function unlockApp() {
+            setAuthCookie();
+            document.getElementById('auth-overlay').classList.add('hidden');
+            const main = document.getElementById('main-content');
+            main.classList.remove('blur-lg', 'pointer-events-none');
+            loadData(); // Trigger data fetch only after auth
+        }
+
+        // Handle PIN input focus cycling
+        document.querySelectorAll('.pin-input').forEach((input, idx, inputs) => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value.length === 1 && idx < inputs.length - 1) {
+                    inputs[idx + 1].focus();
+                }
+                if (Array.from(inputs).every(i => i.value.length === 1)) {
+                    verifyPin();
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+                    inputs[idx - 1].focus();
+                }
+            });
+        });
+
+        // --- Lab Logic ---
         const MARBLE_TYPES = {
             small: { size: 'S', color: 'bg-purple-500 ring-4 ring-purple-500/20', class: 'marble-small' },
             medium: { size: 'M', color: 'bg-emerald-500 border-2 border-yellow-300 ring-4 ring-emerald-500/20', class: 'marble-medium' },
@@ -445,10 +582,7 @@
         }
 
         async function fetchFromSupabase() {
-            if (!supabaseClient) {
-                console.info("Supabase placeholders detected. Data is local-only.");
-                return;
-            }
+            if (!supabaseClient) return;
             try {
                 const { data, error } = await supabaseClient
                     .from('trials')
@@ -472,12 +606,7 @@
                     updateSyncStatus(true);
                 }
             } catch (e) {
-                // Handle "Load failed" gracefully by explaining likely causes in log
-                if (e.message && e.message.includes('Load failed')) {
-                    console.error('Supabase Fetch Error: Network request failed. Check your SUPABASE_URL and ensure the database is active.');
-                } else {
-                    console.error('Supabase Fetch Error:', e);
-                }
+                console.error('Supabase Fetch Error:', e);
                 updateSyncStatus(false);
             }
         }
@@ -866,8 +995,14 @@
         });
 
         document.body.onclick = (e) => { if (e.target.tagName === 'BODY' || e.target.id === 'main-grid') { state.selectedCell = null; renderGrid(); } };
-        loadData();
+        
+        // Final Init
+        if (getAuthCookie()) {
+            unlockApp();
+        } else {
+            // Wait for user to enter PIN
+        }
         lucide.createIcons();
     </script>
 </body>
-</html>eof
+</html>
