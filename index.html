@@ -58,6 +58,7 @@
             border: 4px solid rgba(0,0,0,0.3);
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            outline: none;
         }
 
         @media (min-width: 768px) {
@@ -451,6 +452,7 @@
             state.grid.forEach((cell, idx) => {
                 const cellEl = document.createElement('div');
                 cellEl.dataset.index = idx;
+                cellEl.tabIndex = 0; // Make focusable
                 cellEl.className = `grid-cell rounded-[1.5rem] md:rounded-[2rem] flex items-center justify-center cursor-pointer ${state.selectedCell === idx ? 'selected-cell' : ''}`;
                 if (cell) {
                     const m = MARBLE_TYPES[cell];
@@ -522,7 +524,11 @@
             renderLogs();
         }
 
-        function toggleGroup(key) {
+        function toggleGroup(groupIndex) {
+            // We use the temporary grouped keys built in renderLogs
+            const key = state.currentGroupKeys[groupIndex];
+            if (!key) return;
+            
             if (state.expandedGroups.has(key)) state.expandedGroups.delete(key);
             else state.expandedGroups.add(key);
             renderLogs();
@@ -572,15 +578,17 @@
                     return avgA - avgB;
                 });
 
+                // Save sorted keys to state so toggleGroup can use the index to avoid escaping bugs
+                state.currentGroupKeys = sortedGroupKeys;
+
                 let html = '';
                 sortedGroupKeys.forEach((key, idx) => {
                     const g = groups[key];
                     const avgMs = g.totalMs / g.trials.length;
                     const isExpanded = state.expandedGroups.has(key);
-                    const safeKey = `group-${idx}`; // Use safe index to avoid escaping bug in onclick
                     
                     html += `
-                        <tr class="group-row clickable-row border-l-4 border-indigo-500" onclick="toggleGroup('${key}')">
+                        <tr class="group-row clickable-row border-l-4 border-indigo-500" onclick="toggleGroup(${idx})">
                             <td class="px-8 py-6 text-[10px] font-black opacity-50"><i data-lucide="${isExpanded ? 'chevron-down' : 'chevron-right'}" class="inline w-4 h-4 mr-2"></i> DATA GROUP</td>
                             <td class="px-8 py-6"><span class="px-3 py-1.5 rounded-lg bg-indigo-900/30 text-indigo-400 text-[10px] font-black uppercase border border-indigo-800">${g.gridSummary}</span></td>
                             <td class="px-8 py-6 text-center"><span class="px-3 py-1.5 bg-red-600 text-white text-[10px] font-black rounded-lg shadow-lg uppercase">${g.holeLabel}</span></td>
@@ -803,7 +811,39 @@
         };
 
         window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && !['TEXTAREA', 'INPUT'].includes(document.activeElement.tagName)) { e.preventDefault(); document.getElementById('toggle-timer').click(); }
+            // Space bar for timer toggle
+            if (e.code === 'Space' && !['TEXTAREA', 'INPUT'].includes(document.activeElement.tagName)) { 
+                e.preventDefault(); 
+                document.getElementById('toggle-timer').click(); 
+                return;
+            }
+
+            // Marble hole selection keyboard navigation
+            if (state.selectedCell !== null && !['TEXTAREA', 'INPUT'].includes(document.activeElement.tagName)) {
+                let currentIdx = state.selectedCell;
+                
+                // Handle Arrow keys
+                if (e.key === 'ArrowUp') {
+                    if (currentIdx >= 3) { e.preventDefault(); state.selectedCell = currentIdx - 3; renderGrid(); }
+                } else if (e.key === 'ArrowDown') {
+                    if (currentIdx <= 5) { e.preventDefault(); state.selectedCell = currentIdx + 3; renderGrid(); }
+                } else if (e.key === 'ArrowLeft') {
+                    if (currentIdx % 3 > 0) { e.preventDefault(); state.selectedCell = currentIdx - 1; renderGrid(); }
+                } else if (e.key === 'ArrowRight') {
+                    if (currentIdx % 3 < 2) { e.preventDefault(); state.selectedCell = currentIdx + 1; renderGrid(); }
+                }
+
+                // Handle 1, 2, 3 for marble input
+                if (e.key === '1') { handleInventoryClick('small'); }
+                else if (e.key === '2') { handleInventoryClick('medium'); }
+                else if (e.key === '3') { handleInventoryClick('large'); }
+                // Handle Backspace or Delete to remove marble
+                else if (e.key === 'Backspace' || e.key === 'Delete') { 
+                    state.grid[state.selectedCell] = null; 
+                    saveToLocalStorage(); 
+                    renderGrid(); 
+                }
+            }
         });
 
         loadData();
