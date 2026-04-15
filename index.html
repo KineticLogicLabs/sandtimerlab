@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -74,13 +73,8 @@
             backdrop-filter: blur(12px);
         }
 
-        .timer-glow {
-            text-shadow: 0 0 20px rgba(129, 140, 248, 0.6);
-        }
-        
-        .timer-glow-neg {
-            text-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
-        }
+        .timer-glow { text-shadow: 0 0 20px rgba(129, 140, 248, 0.6); }
+        .timer-glow-neg { text-shadow: 0 0 20px rgba(251, 191, 36, 0.6); }
 
         .timer-active {
             background: #ef4444;
@@ -99,6 +93,9 @@
         tr.clickable-row { cursor: pointer; transition: background 0.2s; }
         tr.clickable-row:hover { background: rgba(129, 140, 248, 0.1); }
         tr.editing-row { background: rgba(251, 191, 36, 0.1); border-left: 4px solid #fbbf24; }
+        
+        tr.group-row { background: rgba(129, 140, 248, 0.05); }
+        tr.child-row { background: rgba(0, 0, 0, 0.2); }
 
         #touch-ghost {
             position: fixed;
@@ -110,50 +107,37 @@
         }
 
         .timer-input {
-            background: transparent;
-            border: none;
-            outline: none;
-            color: inherit;
-            font-family: inherit;
-            text-align: center;
-            padding: 0;
-            margin: 0;
-            width: auto;
-            display: inline-block;
+            background: transparent; border: none; outline: none; color: inherit;
+            font-family: inherit; text-align: center; padding: 0; margin: 0;
+            width: auto; display: inline-block;
         }
-        .timer-input:disabled {
-            cursor: default;
+        .timer-input::-webkit-outer-spin-button, .timer-input::-webkit-inner-spin-button {
+            -webkit-appearance: none; margin: 0;
         }
-        .timer-input::-webkit-outer-spin-button,
-        .timer-input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        .timer-input[type=number] {
-            -moz-appearance: textfield;
-        }
+        .timer-input[type=number] { -moz-appearance: textfield; }
 
         .analytics-panel {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.5s ease-in-out;
+            max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out;
         }
-        .analytics-panel.open {
-            max-height: 600px;
-            margin-bottom: 2rem;
-        }
+        .analytics-panel.open { max-height: 600px; margin-bottom: 2rem; }
 
         .status-pill {
-            padding: 4px 12px;
-            border-radius: 9999px;
-            font-size: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-            display: inline-block;
-            white-space: nowrap;
+            padding: 4px 12px; border-radius: 9999px; font-size: 10px; font-weight: 800;
+            text-transform: uppercase; display: inline-block; white-space: nowrap;
         }
         .status-online { background: #059669; color: white; }
         .status-offline { background: #4b5563; color: white; }
+
+        .toggle-btn {
+            position: relative; width: 48px; height: 24px; background: #334155;
+            border-radius: 999px; cursor: pointer; transition: background 0.3s;
+        }
+        .toggle-btn-circle {
+            position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
+            background: white; border-radius: 50%; transition: transform 0.3s;
+        }
+        .toggle-active { background: #6366f1; }
+        .toggle-active .toggle-btn-circle { transform: translateX(24px); }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8 custom-scrollbar">
@@ -167,7 +151,7 @@
             </div>
             <div class="text-center space-y-2">
                 <h3 class="text-xl font-black uppercase tracking-tight text-white">Purge All History?</h3>
-                <p class="text-sm text-slate-400">This will permanently delete all recorded results in your log and Supabase.</p>
+                <p class="text-sm text-slate-400">This will permanently delete all recorded results.</p>
             </div>
             <div class="flex gap-3 pt-2">
                 <button id="modal-cancel" class="flex-1 py-4 bg-slate-800 hover:bg-slate-700 font-bold rounded-2xl transition-colors text-white">Cancel</button>
@@ -180,17 +164,17 @@
         
         <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div class="flex items-center gap-6">
-                <a href="https://kineticlogiclabs.github.io" class="block transition-transform hover:scale-105 active:scale-95 group" title="Visit Kinetic Logic Labs">
+                <a href="https://kineticlogiclabs.github.io" class="block transition-transform hover:scale-105 active:scale-95 group">
                     <svg viewBox="0 0 700 800" class="w-16 h-16 text-white fill-current drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] group-hover:text-indigo-400 transition-colors">
                         <path d="M386.99,758.16l-32.5,18.39c-9.19,5.2-17.22,3.66-26.1-1.56l-212.56-124.94-97.59-57.79c-5.17-3.03-10.65-7.19-15.56-12.92-.19-.22-.37-.46-.54-.7h0c-.92-1.34-1.42-2.92-1.42-4.55l-.1-359.61c0-.62-.09-1.24-.22-1.85-1.5-7.05,1.23-13.41,7.53-17.22l99.7-60.38L330.11,3.96c5.7-3.36,12.79-5.44,18.55-2.69,12.37,5.91,22.82,11.89,34.74,18.9l212.4,124.99,81.93,49.64c4.41,2.67,7.38,9.18,7.44,14.09l.93,81.49.39,279.84c0,3.75-1.26,7.41-3.69,10.26-3.63,4.23-8.17,7.67-12.66,10.38l-42.13,25.48-241.02,141.81h0ZM656.19,564.85l.43-204.03.25-102.65-.93-35.51c-.15-5.63-2.78-9.47-7.96-12.52l-201.14-118.53-103.03-59.64c-6.09,2.49-10.74,4.61-16.62,8.08L30.41,215.29l-.45,197.89c-.5,6.61-.6,11.7-.13,18.06l.02,133.73,313.32,183.59,39.77-22.91,273.24-160.79h.01Z"/>
                         <path d="M307.34,658.58c-4.29.03-8.9-8.89-10.23-12.84l-11.25-33.58c-.85-2.54-3.59-6.81-5.91-7.78l-46.37-19.37-41.8,21.16c-6.88,3.49-13.75-1.24-18.46-5.66l-24.11-22.62c-7.11-6.67-26.35-22.05-21.32-32.58l16.64-34.79c2.96-6.19,2.56-11.33-.4-17.71-6.24-13.43-11.55-26.94-16.37-41.09l-43.55-13.49c-4.13-1.28-10.87-7.65-10.99-12.05-.59-21.66-.48-41.69.3-62.84.28-7.55,5.56-12.79,12.3-14.71l33.39-9.55c6.58-1.88,8.32-5.26,10.75-11.15l17.49-42.39-16.57-34.11c-2.31-4.75-6.9-15.44-2.72-20.02,14.24-15.54,28.92-29.75,43.95-44.2,7.45-7.16,16.61-8.68,25.6-4.06l35.51,18.24c17.33-8.03,32.92-14.63,50.45-21.11l12.73-41.18c2.7-8.74,9.93-12.93,18.72-12.89l56.05.26c8.52.04,14.36,4.55,17.09,12.54l14.09,41.33c17.15,6.65,32.47,13.43,49.11,21.06l41.81-20.13c6.04-2.91,13.26-.11,17.61,4.13l23.8,23.14c7.2,7,19.1,14.05,22.43,23.91,4.16,12.33-16.19,38.82-20.01,52.71l17.24,41.41c2.34,5.62,6.03,9.76,11.94,11.58l33.12,10.2c3.83,1.18,11.27,6.68,11.71,11,2.35,23.17,2.72,45.18-.02,68.09-.78,6.55-9.87,10.82-15.17,12.36l-38.13,11.1-20.69,50.74,19.86,40.52c1.61,3.29,2.91,10.7.17,13.44l-45.2,45.11c-6.7,6.69-16.12,6.57-24.24,2.55l-36.84-18.22-48.65,20.02-14.81,43.65c-1.98,5.84-8.51,9.36-14.44,9.4l-65.63.45.02.02h0ZM372.49,546.04c56.23-10.13,103.65-52.02,120.79-105.74,29.16-91.39-30.99-187.95-124.97-202.82-83.04-13.14-161.05,39.61-179.27,121.74-11.97,53.98,5.26,110.87,47.01,147.59,23.59,20.75,51.63,35.89,82.98,39.7,17.18,2.09,35.23,2.81,53.47-.47h-.01Z"/>
                     </svg>
                 </a>
                 <div>
-                    <h1 class="text-4xl font-black tracking-tighter leading-none uppercase text-white">Sand Timer <span class="text-indigo-400">Lab</span></h1>
+                    <h1 class="text-4xl font-black tracking-tighter uppercase text-white">Sand Timer <span class="text-indigo-400">Lab</span></h1>
                     <div class="flex flex-col items-start gap-1 mt-2 opacity-40">
                         <span class="text-[10px] font-black uppercase tracking-[0.3em] text-white">Precision Flow Environment</span>
-                        <div id="sync-status" class="status-pill status-offline">Changes not saved</div>
+                        <div id="sync-status" class="status-pill status-offline">Not Synced</div>
                     </div>
                 </div>
             </div>
@@ -200,11 +184,11 @@
                     <div class="text-right">
                         <div class="text-[10px] font-black opacity-30 uppercase tracking-widest mb-0.5 text-white">Trial Timer</div>
                         <div id="timer-group" class="text-4xl font-mono font-black text-indigo-400 timer-glow flex items-center transition-colors">
-                            <input type="number" id="timer-min" class="timer-input w-12 text-right" value="0" placeholder="0">
+                            <input type="number" id="timer-min" class="timer-input w-12 text-right" value="0">
                             <span>:</span>
-                            <input type="number" id="timer-sec" class="timer-input w-14 text-center" value="00" placeholder="00">
+                            <input type="number" id="timer-sec" class="timer-input w-14 text-center" value="00">
                             <span>.</span>
-                            <input type="number" id="timer-cent" class="timer-input w-12 text-left" value="00" placeholder="00">
+                            <input type="number" id="timer-cent" class="timer-input w-12 text-left" value="00">
                         </div>
                     </div>
                     <button id="toggle-timer" class="w-16 h-16 rounded-3xl bg-indigo-600 text-white flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-xl shadow-indigo-900/50">
@@ -218,15 +202,11 @@
         </header>
 
         <section id="analytics-section" class="analytics-panel">
-            <div class="glass-card p-6 h-full min-h-[450px]">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="font-black text-xl tracking-tighter flex items-center gap-2 text-indigo-400 uppercase">
-                        <i data-lucide="bar-chart-3" class="text-indigo-400"></i> Aperture Performance
-                    </h2>
-                </div>
-                <div class="relative h-[320px] w-full">
-                    <canvas id="lab-chart"></canvas>
-                </div>
+            <div class="glass-card p-6 min-h-[450px]">
+                <h2 class="font-black text-xl tracking-tighter flex items-center gap-2 text-indigo-400 uppercase mb-6">
+                    <i data-lucide="bar-chart-3"></i> Aperture Performance
+                </h2>
+                <div class="relative h-[320px] w-full"><canvas id="lab-chart"></canvas></div>
             </div>
         </section>
 
@@ -236,33 +216,32 @@
                     <div class="md:w-64 space-y-6">
                         <section class="glass-card p-6 space-y-5">
                             <h2 class="text-[11px] font-black opacity-40 uppercase tracking-[0.2em] flex items-center gap-2 text-white">
-                                <i data-lucide="layers" class="w-3 h-3 text-white"></i> Assets
+                                <i data-lucide="layers" class="w-3 h-3"></i> Assets
                             </h2>
                             <div class="space-y-3">
-                                <div onclick="handleInventoryClick('small')" draggable="true" ondragstart="handleDragStart(event, 'small')" ontouchstart="handleTouchStart(event, 'small')" class="marble-source flex items-center justify-between p-4 bg-slate-800 rounded-2xl cursor-pointer hover:bg-slate-700 transition-colors group border border-transparent hover:border-indigo-500/30">
+                                <div onclick="handleInventoryClick('small')" draggable="true" ondragstart="handleDragStart(event, 'small')" class="marble-source flex items-center justify-between p-4 bg-slate-800 rounded-2xl cursor-pointer hover:bg-slate-700 border border-transparent hover:border-indigo-500/30">
                                     <div class="flex items-center gap-4">
                                         <div class="w-5 h-5 bg-purple-500 rounded-full shadow-lg ring-4 ring-purple-500/20"></div>
-                                        <span class="font-black text-xs uppercase tracking-tight text-white">Small</span>
+                                        <span class="font-black text-xs uppercase text-white">Small (1)</span>
                                     </div>
                                     <kbd class="px-2 py-0.5 rounded bg-slate-900 text-[9px] font-black opacity-50 border border-slate-700 text-white">1</kbd>
                                 </div>
-                                <div onclick="handleInventoryClick('medium')" draggable="true" ondragstart="handleDragStart(event, 'medium')" ontouchstart="handleTouchStart(event, 'medium')" class="marble-source flex items-center justify-between p-4 bg-slate-800 rounded-2xl cursor-pointer hover:bg-slate-700 transition-colors group border border-transparent hover:border-indigo-500/30">
+                                <div onclick="handleInventoryClick('medium')" draggable="true" ondragstart="handleDragStart(event, 'medium')" class="marble-source flex items-center justify-between p-4 bg-slate-800 rounded-2xl cursor-pointer hover:bg-slate-700 border border-transparent hover:border-indigo-500/30">
                                     <div class="flex items-center gap-4">
                                         <div class="w-8 h-8 bg-emerald-500 border-2 border-yellow-300 rounded-full shadow-lg ring-4 ring-emerald-500/20"></div>
-                                        <span class="font-black text-xs uppercase tracking-tight text-white">Medium</span>
+                                        <span class="font-black text-xs uppercase text-white">Medium (2)</span>
                                     </div>
                                     <kbd class="px-2 py-0.5 rounded bg-slate-900 text-[9px] font-black opacity-50 border border-slate-700 text-white">2</kbd>
                                 </div>
-                                <div onclick="handleInventoryClick('large')" draggable="true" ondragstart="handleDragStart(event, 'large')" ontouchstart="handleTouchStart(event, 'large')" class="marble-source flex items-center justify-between p-4 bg-slate-800 rounded-2xl cursor-pointer hover:bg-slate-700 transition-colors group border border-transparent hover:border-indigo-500/30">
+                                <div onclick="handleInventoryClick('large')" draggable="true" ondragstart="handleDragStart(event, 'large')" class="marble-source flex items-center justify-between p-4 bg-slate-800 rounded-2xl cursor-pointer hover:bg-slate-700 border border-transparent hover:border-indigo-500/30">
                                     <div class="flex items-center gap-4">
                                         <div class="w-12 h-12 bg-slate-900 border-2 border-orange-500 rounded-full shadow-xl ring-4 ring-slate-900/20"></div>
-                                        <span class="font-black text-xs uppercase tracking-tight text-white text-slate-200">Large</span>
+                                        <span class="font-black text-xs uppercase text-white">Large (3)</span>
                                     </div>
                                     <kbd class="px-2 py-0.5 rounded bg-slate-900 text-[9px] font-black opacity-50 border border-slate-700 text-white">3</kbd>
                                 </div>
                             </div>
                         </section>
-
                         <section class="glass-card p-6 bg-red-900/10 border-red-500/20">
                             <h2 class="text-[11px] font-black opacity-40 uppercase tracking-[0.2em] mb-4 text-center text-white">Rod Aperture</h2>
                             <div id="rod-container" class="bg-red-700 p-5 rounded-2xl flex items-center justify-center gap-3 shadow-inner h-24 overflow-hidden"></div>
@@ -280,43 +259,44 @@
                     <div class="flex justify-between items-center">
                         <h2 class="text-[11px] font-black opacity-40 uppercase tracking-[0.2em] text-white">Trial Notes</h2>
                         <div id="edit-indicator" class="hidden flex items-center gap-1.5 text-[10px] font-bold text-amber-400 uppercase bg-amber-900/20 px-2 py-1 rounded-lg">
-                            <i data-lucide="edit-3" class="w-3 h-3 text-amber-400"></i> Edit Mode
+                            <i data-lucide="edit-3" class="w-3 h-3"></i> Edit Mode
                         </div>
                     </div>
                     <div class="space-y-4">
                         <div class="p-1 rounded-3xl bg-slate-800 border border-slate-700/50 shadow-inner">
-                            <textarea id="trial-comment" placeholder="Describe experimental results..." class="w-full h-32 p-5 rounded-2xl bg-transparent border-none focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all text-sm font-medium text-white resize-none"></textarea>
+                            <textarea id="trial-comment" placeholder="Describe experimental results..." class="w-full h-32 p-5 rounded-2xl bg-transparent border-none focus:ring-2 focus:ring-indigo-500/50 outline-none text-sm font-medium text-white resize-none"></textarea>
                         </div>
-                        
                         <div id="action-buttons" class="space-y-3">
-                            <button id="save-run" class="w-full py-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black tracking-widest shadow-2xl shadow-indigo-900/50 transition-all flex items-center justify-center gap-3">
-                                <i data-lucide="save" class="text-white"></i> RECORD TRIAL
+                            <button id="save-run" class="w-full py-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black tracking-widest shadow-2xl shadow-indigo-900/50 transition-all flex items-center justify-center gap-3 uppercase">
+                                <i data-lucide="save"></i> Record Trial
                             </button>
                             <button id="cancel-edit" class="hidden w-full py-3 bg-slate-800/60 border border-slate-700/50 hover:bg-slate-700 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2">
                                 <i data-lucide="x" class="w-3 h-3 text-white"></i> Cancel Edit
                             </button>
                         </div>
-
                         <div class="pt-4 space-y-3 border-t border-slate-800">
                              <button id="btn-toggle-analytics" class="w-full py-3 bg-indigo-900/20 hover:bg-indigo-900/40 text-indigo-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2">
-                                <i data-lucide="bar-chart-2" class="w-3 h-3 text-indigo-400"></i> Toggle Analytics Mode
+                                <i data-lucide="bar-chart-2" class="w-3 h-3"></i> Toggle Analytics Mode
                             </button>
                              <button id="btn-clear-current" class="w-full py-3 bg-slate-800/60 hover:bg-slate-700 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 border border-slate-700/30">
-                                <i data-lucide="rotate-ccw" class="w-3 h-3 text-slate-400"></i> Clear Current Session
+                                <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Clear Current Session
                             </button>
                              <button id="show-confirm-modal" class="w-full py-3 bg-red-900/10 hover:bg-red-900/20 text-red-500/60 hover:text-red-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 border border-red-900/20">
-                                <i data-lucide="trash-2" class="w-3 h-3 text-red-500"></i> Purge All History
+                                <i data-lucide="trash-2" class="w-3 h-3"></i> Purge All History
                             </button>
                         </div>
                     </div>
                 </section>
                 
-                <div class="grid grid-cols-2 gap-4">
-                    <button id="btn-export" class="py-4 glass-card flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-900/20 transition-all text-white">
-                        <i data-lucide="download" class="w-4 h-4 text-white"></i> Export
+                <div class="grid grid-cols-3 gap-3">
+                    <button id="btn-export" class="py-4 glass-card flex flex-col items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest hover:bg-indigo-900/20 transition-all text-white">
+                        <i data-lucide="download" class="w-4 h-4"></i> JSON
                     </button>
-                    <button id="btn-import" class="py-4 glass-card flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-900/20 transition-all text-white">
-                        <i data-lucide="upload" class="w-4 h-4 text-white"></i> Import
+                    <button id="btn-export-text" class="py-4 glass-card flex flex-col items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest hover:bg-indigo-900/20 transition-all text-white">
+                        <i data-lucide="file-text" class="w-4 h-4"></i> Report
+                    </button>
+                    <button id="btn-import" class="py-4 glass-card flex flex-col items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest hover:bg-indigo-900/20 transition-all text-white">
+                        <i data-lucide="upload" class="w-4 h-4"></i> Import
                     </button>
                     <input type="file" id="import-input" class="hidden" accept=".json">
                 </div>
@@ -324,27 +304,35 @@
         </div>
 
         <section class="glass-card overflow-hidden">
-            <div class="p-8 border-b border-slate-800 flex justify-between items-center bg-slate-800/20">
+            <div class="p-8 border-b border-slate-800 flex flex-col md:flex-row md:justify-between md:items-center bg-slate-800/20 gap-4">
                 <div class="flex items-center gap-4">
                     <h2 class="font-black text-2xl tracking-tighter text-indigo-100 uppercase text-white">Results Log</h2>
                     <span id="trial-count" class="px-5 py-1 bg-indigo-600 text-white text-[10px] font-black rounded-full uppercase tracking-widest">0 TRIALS</span>
                 </div>
-                <div class="hidden md:block text-[10px] font-black opacity-30 uppercase text-white">Click row to edit trial details</div>
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-3">
+                        <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Group & Sort Mode</span>
+                        <div id="view-toggle" class="toggle-btn" onclick="toggleViewMode()">
+                            <div class="toggle-btn-circle"></div>
+                        </div>
+                    </div>
+                    <div class="hidden md:block text-[10px] font-black opacity-30 uppercase text-white">Auto-sort: Least to Greatest</div>
+                </div>
             </div>
             <div class="overflow-x-auto max-h-[600px] custom-scrollbar">
                 <table class="w-full text-left">
-                    <thead>
+                    <thead id="log-head">
                         <tr class="text-[10px] font-black uppercase opacity-30 border-b border-slate-800 text-white">
                             <th class="px-8 py-5">Timestamp</th>
                             <th class="px-8 py-5">Configuration</th>
                             <th class="px-8 py-5 text-center">Hole</th>
-                            <th class="px-8 py-5">Researcher Comments</th>
-                            <th class="px-8 py-5 text-right">Elapsed</th>
-                            <th class="px-8 py-5 text-right">Actions</th>
+                            <th class="px-8 py-5">Comments</th>
+                            <th class="px-8 py-5 text-right">Time</th>
+                            <th class="px-8 py-5 text-right">Action</th>
                         </tr>
                     </thead>
                     <tbody id="log-body" class="divide-y divide-slate-800 text-white">
-                        <tr><td colspan="6" class="px-8 py-20 text-center opacity-20 italic font-medium tracking-tight">No experimental data found.</td></tr>
+                        <tr><td colspan="6" class="px-8 py-20 text-center opacity-20 italic font-medium">No experimental data found.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -352,31 +340,18 @@
     </div>
 
     <script>
-        // --- Supabase Config ---
         const SUPABASE_URL = 'https://iiikcbcdnzhhqwanrkem.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpaWtjYmNkbnpoaHF3YW5ya2VtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MTYzNDMsImV4cCI6MjA5MDk5MjM0M30.lidTsaloNiWCJAvi32WZyt5VFo0Nxx8-5Wy4fpqKJ44'; 
         
         let supabaseClient = null;
-
-        // More robust placeholder detection
-        const isPlaceholder = (str) => {
-            if (!str) return true;
-            const s = str.toLowerCase();
-            return s.includes('your_project_id') || s.includes('your_anon_key') || s === '';
-        };
-
-        if (!isPlaceholder(SUPABASE_URL) && !isPlaceholder(SUPABASE_ANON_KEY)) {
-            try {
-                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            } catch (e) {
-                console.error("Supabase Initialization Failed:", e);
-            }
+        if (SUPABASE_URL && !SUPABASE_URL.includes('your_project')) {
+            try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
         }
 
         const MARBLE_TYPES = {
-            small: { size: 'S', color: 'bg-purple-500 ring-4 ring-purple-500/20', class: 'marble-small' },
-            medium: { size: 'M', color: 'bg-emerald-500 border-2 border-yellow-300 ring-4 ring-emerald-500/20', class: 'marble-medium' },
-            large: { size: 'L', color: 'bg-slate-900 border-2 border-orange-500 ring-4 ring-slate-900/20', class: 'marble-large' }
+            small: { size: 'S', symbol: '1', color: 'bg-purple-500 ring-4 ring-purple-500/20', class: 'marble-small' },
+            medium: { size: 'M', symbol: '2', color: 'bg-emerald-500 border-2 border-yellow-300 ring-4 ring-emerald-500/20', class: 'marble-medium' },
+            large: { size: 'L', symbol: '3', color: 'bg-slate-900 border-2 border-orange-500 ring-4 ring-slate-900/20', class: 'marble-large' }
         };
 
         const HOLE_SIZES = [14, 22, 30, 38, 46];
@@ -392,7 +367,9 @@
             startTime: null,
             timerId: null,
             editingId: null,
-            analyticsOpen: false
+            analyticsOpen: false,
+            viewMode: 'list',
+            expandedGroups: new Set()
         };
 
         let labChart = null;
@@ -404,84 +381,20 @@
         const syncStatus = document.getElementById('sync-status');
 
         function updateSyncStatus(isOnline) {
-            if (isOnline) {
-                syncStatus.innerText = 'Synced';
-                syncStatus.classList.replace('status-offline', 'status-online');
-            } else {
-                syncStatus.innerText = 'Changes not saved';
-                syncStatus.classList.replace('status-online', 'status-offline');
-            }
+            syncStatus.innerText = isOnline ? 'Synced' : 'Offline';
+            syncStatus.className = `status-pill ${isOnline ? 'status-online' : 'status-offline'}`;
         }
 
         async function syncToSupabase(log) {
             if (!supabaseClient) return;
             try {
-                const { error } = await supabaseClient
-                    .from('trials')
-                    .upsert({
-                        id: log.id,
-                        timestamp: log.timestamp,
-                        grid_summary: log.gridSummary,
-                        grid_data: log.gridData,
-                        hole_index: log.holeIndex,
-                        hole_label: log.holeLabel,
-                        duration: log.duration,
-                        comment: log.comment
-                    });
-                if (error) {
-                    console.error('Supabase Sync Error:', error);
-                    updateSyncStatus(false);
-                } else {
-                    updateSyncStatus(true);
-                }
-            } catch (e) { 
-                console.error('Supabase Network Error:', e); 
-                updateSyncStatus(false);
-            }
-        }
-
-        async function deleteFromSupabase(id) {
-            if (!supabaseClient) return;
-            try {
-                const { error } = await supabaseClient.from('trials').delete().eq('id', id);
-                if (error) {
-                    console.error('Supabase Delete Error:', error);
-                    updateSyncStatus(false);
-                }
-            } catch (e) {
-                console.error('Supabase Network Error during Delete:', e);
-                updateSyncStatus(false);
-            }
-        }
-
-        async function fetchFromSupabase() {
-            if (!supabaseClient) return;
-            try {
-                const { data, error } = await supabaseClient
-                    .from('trials')
-                    .select('*')
-                    .order('id', { ascending: false });
-                
-                if (error) throw error;
-                if (data) {
-                    state.logs = data.map(d => ({
-                        id: d.id,
-                        timestamp: d.timestamp,
-                        gridSummary: d.grid_summary,
-                        gridData: d.grid_data,
-                        holeIndex: d.hole_index,
-                        holeLabel: d.hole_label,
-                        duration: d.duration,
-                        comment: d.comment
-                    }));
-                    renderLogs();
-                    updateAnalytics();
-                    updateSyncStatus(true);
-                }
-            } catch (e) {
-                console.error('Supabase Fetch Error:', e);
-                updateSyncStatus(false);
-            }
+                await supabaseClient.from('trials').upsert({
+                    id: log.id, timestamp: log.timestamp, grid_summary: log.gridSummary,
+                    grid_data: log.gridData, hole_index: log.holeIndex, hole_label: log.holeLabel,
+                    duration: log.duration, comment: log.comment
+                });
+                updateSyncStatus(true);
+            } catch(e) { updateSyncStatus(false); }
         }
 
         function saveToLocalStorage() {
@@ -501,7 +414,21 @@
             }
             renderAll();
             initChart();
-            await fetchFromSupabase();
+            if (supabaseClient) {
+                try {
+                    const { data } = await supabaseClient.from('trials').select('*').order('id', { ascending: false });
+                    if (data) {
+                        state.logs = data.map(d => ({
+                            id: d.id, timestamp: d.timestamp, gridSummary: d.grid_summary,
+                            gridData: d.grid_data, holeIndex: d.hole_index, holeLabel: d.hole_label,
+                            duration: d.duration, comment: d.comment
+                        }));
+                        renderLogs();
+                        updateAnalytics();
+                        updateSyncStatus(true);
+                    }
+                } catch(e) {}
+            }
         }
 
         function renderTimerValues(ms) {
@@ -514,13 +441,8 @@
         }
 
         function updateTimerDisplayColor() {
-            if (state.msTime < 0) {
-                timerGroup.classList.replace('text-indigo-400', 'text-amber-500');
-                timerGroup.classList.replace('timer-glow', 'timer-glow-neg');
-            } else {
-                timerGroup.classList.replace('text-amber-500', 'text-indigo-400');
-                timerGroup.classList.replace('timer-glow-neg', 'timer-glow');
-            }
+            const cls = state.msTime < 0 ? 'text-amber-500 timer-glow-neg' : 'text-indigo-400 timer-glow';
+            timerGroup.className = `text-4xl font-mono font-black ${cls} flex items-center transition-colors`;
         }
 
         function renderGrid() {
@@ -536,11 +458,10 @@
                     marbleEl.className = `${m.class} ${m.color} rounded-full shadow-2xl cursor-grab transition-all active:scale-95`;
                     marbleEl.draggable = true;
                     marbleEl.addEventListener('dragstart', (e) => handleDragStart(e, cell, idx));
-                    marbleEl.addEventListener('touchstart', (e) => handleTouchStart(e, cell, idx));
                     cellEl.appendChild(marbleEl);
                 } else {
                     const center = document.createElement('div');
-                    center.className = 'w-3 h-3 rounded-full bg-white/5 shadow-inner';
+                    center.className = 'w-3 h-3 rounded-full bg-white/5';
                     cellEl.appendChild(center);
                 }
                 cellEl.onclick = (e) => { e.stopPropagation(); state.selectedCell = idx; renderGrid(); };
@@ -549,7 +470,7 @@
                     e.preventDefault();
                     const type = e.dataTransfer.getData('type');
                     const from = e.dataTransfer.getData('fromIndex');
-                    if (from !== "" && from !== null) state.grid[parseInt(from)] = null;
+                    if (from) state.grid[parseInt(from)] = null;
                     state.grid[idx] = type; state.selectedCell = idx;
                     saveToLocalStorage(); renderGrid();
                 };
@@ -575,22 +496,9 @@
                 type: 'bar',
                 data: {
                     labels: ['H1', 'H2', 'H3', 'H4', 'H5'],
-                    datasets: [{
-                        label: 'Avg. Seconds',
-                        data: [0, 0, 0, 0, 0],
-                        backgroundColor: '#818cf8',
-                        borderRadius: 12,
-                        hoverBackgroundColor: '#6366f1',
-                    }]
+                    datasets: [{ label: 'Avg Sec', data: [0,0,0,0,0], backgroundColor: '#818cf8', borderRadius: 12 }]
                 },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
-                        x: { grid: { display: false }, ticks: { color: '#64748b' } }
-                    }
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } } }
             });
             updateAnalytics();
         }
@@ -608,57 +516,99 @@
             labChart.update();
         }
 
-        function recallTrial(trialId) {
-            const trial = state.logs.find(l => l.id === trialId);
-            if (!trial) return;
-            state.editingId = trial.id;
-            state.grid = [...trial.gridData]; state.selectedHole = trial.holeIndex;
-            state.msTime = parseTime(trial.duration) || 0;
-            renderTimerValues(state.msTime);
-            document.getElementById('trial-comment').value = trial.comment || '';
-            document.getElementById('edit-indicator').classList.remove('hidden');
-            document.getElementById('cancel-edit').classList.remove('hidden');
-            document.getElementById('save-run').innerHTML = '<i data-lucide="check-circle"></i> Commit Changes';
-            document.getElementById('save-run').classList.replace('bg-indigo-600', 'bg-amber-600');
-            renderGrid(); renderRod(); renderLogs(); lucide.createIcons();
+        function toggleViewMode() {
+            state.viewMode = state.viewMode === 'list' ? 'grouped' : 'list';
+            document.getElementById('view-toggle').classList.toggle('toggle-active', state.viewMode === 'grouped');
+            renderLogs();
         }
 
-        function cancelEditing() {
-            state.editingId = null;
-            document.getElementById('edit-indicator').classList.add('hidden');
-            document.getElementById('cancel-edit').classList.add('hidden');
-            document.getElementById('save-run').innerHTML = '<i data-lucide="save"></i> Record Trial';
-            document.getElementById('save-run').classList.replace('bg-amber-600', 'bg-indigo-600');
-            resetStation(); lucide.createIcons();
+        function toggleGroup(key) {
+            if (state.expandedGroups.has(key)) state.expandedGroups.delete(key);
+            else state.expandedGroups.add(key);
+            renderLogs();
         }
 
-        async function deleteTrial(id, ev) {
-            ev.stopPropagation();
-            if (state.editingId === id) cancelEditing();
-            state.logs = state.logs.filter(l => l.id !== id);
-            await deleteFromSupabase(id);
-            saveToLocalStorage(); renderLogs();
+        function formatMs(ms) {
+            const isNeg = ms < 0, absMs = Math.abs(ms);
+            return (isNeg ? '-' : '') + `${Math.floor(absMs/60000)}:${Math.floor((absMs%60000)/1000).toString().padStart(2,'0')}.${Math.floor((absMs%1000)/10).toString().padStart(2,'0')}`;
         }
 
         function renderLogs() {
             const logBody = document.getElementById('log-body');
             document.getElementById('trial-count').innerText = `${state.logs.length} TRIALS`;
+            
             if (state.logs.length === 0) {
-                logBody.innerHTML = '<tr><td colspan="6" class="px-8 py-20 text-center opacity-20 italic font-medium tracking-tight">No experimental data found.</td></tr>';
+                logBody.innerHTML = '<tr><td colspan="6" class="px-8 py-20 text-center opacity-20 italic">No experimental data found.</td></tr>';
                 return;
             }
-            logBody.innerHTML = state.logs.map(log => `
-                <tr class="clickable-row border-b border-slate-800/50 ${state.editingId === log.id ? 'editing-row' : ''}" onclick="recallTrial(${log.id})">
-                    <td class="px-8 py-6 text-[10px] font-black opacity-30 font-mono uppercase">${log.timestamp}</td>
-                    <td class="px-8 py-6"><span class="px-3 py-1.5 rounded-lg bg-indigo-900/30 text-indigo-400 text-[10px] font-black uppercase border border-indigo-800">${log.gridSummary}</span></td>
-                    <td class="px-8 py-6 text-center"><span class="px-3 py-1.5 bg-red-600 text-white text-[10px] font-black rounded-lg shadow-lg shadow-red-500/20 uppercase">${log.holeLabel}</span></td>
-                    <td class="px-8 py-6 text-sm font-medium opacity-50 max-w-sm truncate">${log.comment || '—'}</td>
-                    <td class="px-8 py-6 text-right font-mono font-black text-indigo-400 text-lg">${log.duration}</td>
-                    <td class="px-8 py-6 text-right">
-                        <button onclick="deleteTrial(${log.id}, event)" class="p-2 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors"><i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i></button>
-                    </td>
-                </tr>
-            `).join('');
+
+            if (state.viewMode === 'list') {
+                logBody.innerHTML = state.logs.map(log => `
+                    <tr class="clickable-row border-b border-slate-800/50 ${state.editingId === log.id ? 'editing-row' : ''}" onclick="recallTrial(${log.id})">
+                        <td class="px-8 py-6 text-[10px] font-black opacity-30 font-mono">${log.timestamp}</td>
+                        <td class="px-8 py-6"><span class="px-3 py-1.5 rounded-lg bg-indigo-900/30 text-indigo-400 text-[10px] font-black uppercase border border-indigo-800">${log.gridSummary}</span></td>
+                        <td class="px-8 py-6 text-center"><span class="px-3 py-1.5 bg-red-600 text-white text-[10px] font-black rounded-lg shadow-lg uppercase">${log.holeLabel}</span></td>
+                        <td class="px-8 py-6 text-sm font-medium opacity-50 max-w-sm truncate">${log.comment || '—'}</td>
+                        <td class="px-8 py-6 text-right font-mono font-black text-indigo-400 text-lg">${log.duration}</td>
+                        <td class="px-8 py-6 text-right">
+                            <button onclick="deleteTrial(${log.id}, event)" class="p-2 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                const groups = {};
+                state.logs.forEach(log => {
+                    const key = JSON.stringify(log.gridData) + '|' + log.holeIndex;
+                    if (!groups[key]) {
+                        groups[key] = { key, gridSummary: log.gridSummary, holeLabel: log.holeLabel, trials: [], totalMs: 0 };
+                    }
+                    groups[key].trials.push(log);
+                    groups[key].totalMs += parseTime(log.duration);
+                });
+
+                const sortedGroupKeys = Object.keys(groups).sort((a, b) => {
+                    const avgA = groups[a].totalMs / groups[a].trials.length;
+                    const avgB = groups[b].totalMs / groups[b].trials.length;
+                    return avgA - avgB;
+                });
+
+                let html = '';
+                sortedGroupKeys.forEach((key, idx) => {
+                    const g = groups[key];
+                    const avgMs = g.totalMs / g.trials.length;
+                    const isExpanded = state.expandedGroups.has(key);
+                    const safeKey = `group-${idx}`; // Use safe index to avoid escaping bug in onclick
+                    
+                    html += `
+                        <tr class="group-row clickable-row border-l-4 border-indigo-500" onclick="toggleGroup('${key}')">
+                            <td class="px-8 py-6 text-[10px] font-black opacity-50"><i data-lucide="${isExpanded ? 'chevron-down' : 'chevron-right'}" class="inline w-4 h-4 mr-2"></i> DATA GROUP</td>
+                            <td class="px-8 py-6"><span class="px-3 py-1.5 rounded-lg bg-indigo-900/30 text-indigo-400 text-[10px] font-black uppercase border border-indigo-800">${g.gridSummary}</span></td>
+                            <td class="px-8 py-6 text-center"><span class="px-3 py-1.5 bg-red-600 text-white text-[10px] font-black rounded-lg shadow-lg uppercase">${g.holeLabel}</span></td>
+                            <td class="px-8 py-6 text-sm font-black text-indigo-200">AVG PERFORMANCE</td>
+                            <td class="px-8 py-6 text-right font-mono font-black text-indigo-400 text-xl">${formatMs(avgMs)}</td>
+                            <td class="px-8 py-6 text-right opacity-30 text-[9px] font-bold">SORTED</td>
+                        </tr>
+                    `;
+
+                    if (isExpanded) {
+                        g.trials.forEach(trial => {
+                            html += `
+                                <tr class="child-row clickable-row border-b border-slate-800/20" onclick="recallTrial(${trial.id})">
+                                    <td class="px-8 py-4 pl-16 text-[9px] font-bold opacity-30 uppercase">${trial.timestamp}</td>
+                                    <td class="px-8 py-4 opacity-40 text-[9px] uppercase">Individual Trial</td>
+                                    <td class="px-8 py-4 text-center opacity-40">—</td>
+                                    <td class="px-8 py-4 text-xs italic opacity-40 truncate max-w-xs">${trial.comment || 'No comment'}</td>
+                                    <td class="px-8 py-4 text-right font-mono font-bold text-slate-400">${trial.duration}</td>
+                                    <td class="px-8 py-4 text-right">
+                                        <button onclick="deleteTrial(${trial.id}, event)" class="p-1 text-red-500 opacity-50 hover:opacity-100"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    }
+                });
+                logBody.innerHTML = html;
+            }
             lucide.createIcons();
         }
 
@@ -688,25 +638,43 @@
             document.getElementById('toggle-timer').classList.remove('timer-active');
             document.getElementById('timer-icon').setAttribute('data-lucide', 'play');
             minIn.disabled = secIn.disabled = centIn.disabled = false;
-            renderGrid(); renderRod(); lucide.createIcons(); saveToLocalStorage();
+            renderGrid(); renderRod(); lucide.createIcons();
         }
 
-        function syncStateFromInputs() {
-            if (state.isRunning) return;
-            const mVal = minIn.value, sVal = secIn.value, cVal = centIn.value;
-            const isNegative = mVal.startsWith('-') || sVal.startsWith('-') || cVal.startsWith('-');
-            const mins = Math.abs(parseInt(mVal) || 0), secs = Math.abs(parseInt(sVal) || 0), cents = Math.abs(parseInt(cVal) || 0);
-            state.msTime = (mins * 60000) + (secs * 1000) + (cents * 10);
-            if (isNegative) state.msTime *= -1;
-            updateTimerDisplayColor(); updateAnalytics();
+        function recallTrial(trialId) {
+            const trial = state.logs.find(l => l.id === trialId);
+            if (!trial) return;
+            state.editingId = trial.id;
+            state.grid = [...trial.gridData]; state.selectedHole = trial.holeIndex;
+            state.msTime = parseTime(trial.duration);
+            renderTimerValues(state.msTime);
+            document.getElementById('trial-comment').value = trial.comment || '';
+            document.getElementById('edit-indicator').classList.remove('hidden');
+            document.getElementById('cancel-edit').classList.remove('hidden');
+            document.getElementById('save-run').classList.replace('bg-indigo-600', 'bg-amber-600');
+            document.getElementById('save-run').innerHTML = '<i data-lucide="check-circle"></i> Commit Changes';
+            renderGrid(); renderRod(); renderLogs(); lucide.createIcons();
+        }
+
+        async function deleteTrial(id, ev) {
+            if (ev) ev.stopPropagation();
+            if (state.editingId === id) cancelEditing();
+            state.logs = state.logs.filter(l => l.id !== id);
+            if (supabaseClient) await supabaseClient.from('trials').delete().eq('id', id);
+            saveToLocalStorage(); renderLogs();
+        }
+
+        function cancelEditing() {
+            state.editingId = null;
+            document.getElementById('edit-indicator').classList.add('hidden');
+            document.getElementById('cancel-edit').classList.add('hidden');
+            document.getElementById('save-run').classList.replace('bg-amber-600', 'bg-indigo-600');
+            document.getElementById('save-run').innerHTML = '<i data-lucide="save"></i> Record Trial';
+            resetStation(); lucide.createIcons();
         }
 
         function handleInventoryClick(type) {
-            if (state.selectedCell !== null) {
-                state.grid[state.selectedCell] = type;
-                saveToLocalStorage();
-                renderGrid();
-            }
+            if (state.selectedCell !== null) { state.grid[state.selectedCell] = type; saveToLocalStorage(); renderGrid(); }
         }
 
         window.handleDragStart = (e, type, fromIndex = null) => {
@@ -714,35 +682,25 @@
             if (fromIndex !== null) e.dataTransfer.setData('fromIndex', fromIndex);
         };
 
-        let touchData = { type: null, fromIndex: null };
-        const ghost = document.getElementById('touch-ghost');
-        function handleTouchStart(e, type, fromIndex = null) {
-            touchData.type = type; touchData.fromIndex = fromIndex;
-            const m = MARBLE_TYPES[type];
-            ghost.className = `${m.class} ${m.color} rounded-full fixed shadow-2xl block`;
-            ghost.style.left = e.touches[0].clientX + 'px'; ghost.style.top = e.touches[0].clientY + 'px';
-        }
-        window.addEventListener('touchmove', (e) => {
-            if (!touchData.type) return;
-            e.preventDefault(); ghost.style.left = e.touches[0].clientX + 'px'; ghost.style.top = e.touches[0].clientY + 'px';
-        }, { passive: false });
-        window.addEventListener('touchend', (e) => {
-            if (!touchData.type) return;
-            const touch = e.changedTouches[0];
-            const cell = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.grid-cell');
-            if (cell) {
-                const idx = parseInt(cell.dataset.index);
-                if (touchData.fromIndex !== null) state.grid[touchData.fromIndex] = null;
-                state.grid[idx] = touchData.type; state.selectedCell = idx;
-                saveToLocalStorage(); renderGrid();
+        document.getElementById('save-run').onclick = async () => {
+            const summary = state.grid.map((item, i) => (item ? `${MARBLE_TYPES[item].size}@${i + 1}` : null)).filter(Boolean).join(', ') || 'Empty';
+            const duration = formatMs(state.msTime);
+            const comment = document.getElementById('trial-comment').value;
+            
+            let logEntry;
+            if (state.editingId) {
+                const i = state.logs.findIndex(l => l.id === state.editingId);
+                state.logs[i] = { ...state.logs[i], gridSummary: summary, gridData: [...state.grid], holeIndex: state.selectedHole, holeLabel: state.selectedHole !== null ? `H${state.selectedHole + 1}` : '—', duration, comment };
+                logEntry = state.logs[i];
+                cancelEditing();
+            } else {
+                logEntry = { id: Date.now(), timestamp: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}), gridSummary: summary, gridData: [...state.grid], holeIndex: state.selectedHole, holeLabel: state.selectedHole !== null ? `H${state.selectedHole + 1}` : '—', duration, comment };
+                state.logs.unshift(logEntry);
+                resetStation();
             }
-            touchData.type = null; touchData.fromIndex = null; ghost.style.display = 'none';
-        });
-
-        [minIn, secIn, centIn].forEach(input => {
-            input.addEventListener('input', syncStateFromInputs);
-            input.addEventListener('blur', () => { if (!state.isRunning) renderTimerValues(state.msTime); });
-        });
+            await syncToSupabase(logEntry);
+            saveToLocalStorage(); renderLogs();
+        };
 
         document.getElementById('toggle-timer').onclick = () => {
             state.isRunning = !state.isRunning;
@@ -767,107 +725,87 @@
             lucide.createIcons();
         };
 
-        document.getElementById('save-run').onclick = async () => {
-            const summary = state.grid.map((item, i) => (item ? `${MARBLE_TYPES[item].size}@${i + 1}` : null)).filter(Boolean).join(', ') || 'Empty';
-            const comment = document.getElementById('trial-comment').value;
-            const isNeg = state.msTime < 0, absMs = Math.abs(state.msTime);
-            const duration = (isNeg ? '-' : '') + `${Math.floor(absMs/60000)}:${Math.floor((absMs%60000)/1000).toString().padStart(2,'0')}.${Math.floor((absMs%1000)/10).toString().padStart(2,'0')}`;
-            
-            let logEntry;
-            if (state.editingId) {
-                const i = state.logs.findIndex(l => l.id === state.editingId);
-                if (i !== -1) {
-                    state.logs[i] = { ...state.logs[i], gridSummary: summary, gridData: [...state.grid], holeIndex: state.selectedHole, holeLabel: state.selectedHole !== null ? `H${state.selectedHole + 1}` : '—', duration, comment };
-                    logEntry = state.logs[i];
-                }
-                cancelEditing();
-            } else {
-                logEntry = { 
-                    id: Date.now(), 
-                    timestamp: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}), 
-                    gridSummary: summary, 
-                    gridData: [...state.grid], 
-                    holeIndex: state.selectedHole, 
-                    holeLabel: state.selectedHole !== null ? `H${state.selectedHole + 1}` : '—', 
-                    duration, 
-                    comment 
-                };
-                state.logs.unshift(logEntry);
-                resetStation();
-            }
-            
-            await syncToSupabase(logEntry);
-            saveToLocalStorage(); 
-            renderLogs();
-        };
+        document.getElementById('btn-export-text').onclick = () => {
+            let report = "SAND TIMER LAB - PRECISION DATA REPORT\n";
+            report += "Generated: " + new Date().toLocaleString() + "\n";
+            report += "===============================================\n\n";
 
-        document.getElementById('cancel-edit').onclick = cancelEditing;
-        document.getElementById('btn-toggle-analytics').onclick = () => {
-            state.analyticsOpen = !state.analyticsOpen;
-            document.getElementById('analytics-section').classList.toggle('open', state.analyticsOpen);
-            if (state.analyticsOpen) updateAnalytics();
-        };
-        document.getElementById('btn-clear-current').onclick = resetStation;
-        const modal = document.getElementById('confirm-modal');
-        document.getElementById('show-confirm-modal').onclick = () => modal.classList.replace('hidden', 'flex');
-        document.getElementById('modal-cancel').onclick = () => modal.classList.replace('flex', 'hidden');
-        document.getElementById('modal-confirm').onclick = async () => {
-            if (supabaseClient) {
-                try {
-                    await supabaseClient.from('trials').delete().neq('id', 0); // Delete all
-                } catch(e) { console.error('Supabase Delete All Failed:', e); }
-            }
-            state.logs = []; resetStation(); saveToLocalStorage(); renderLogs(); modal.classList.replace('flex', 'hidden');
+            const groups = {};
+            state.logs.forEach(log => {
+                const key = JSON.stringify(log.gridData) + '|' + log.holeIndex;
+                if (!groups[key]) groups[key] = { grid: log.gridData, hole: log.holeLabel, trials: [] };
+                groups[key].trials.push(log);
+            });
+
+            Object.values(groups).forEach(g => {
+                report += "CONFIGURATION: " + g.hole + "\n";
+                report += "_________________\n";
+                for (let r = 0; r < 3; r++) {
+                    let rowStr = "|";
+                    for (let c = 0; c < 3; c++) {
+                        const cell = g.grid[r * 3 + c];
+                        const symbol = cell ? MARBLE_TYPES[cell].symbol : " ";
+                        rowStr += ` ${symbol} |`;
+                    }
+                    report += rowStr + "\n";
+                    report += "_________________\n";
+                }
+                
+                const timesMs = g.trials.map(t => parseTime(t.duration));
+                const totalMs = timesMs.reduce((acc, t) => acc + t, 0);
+                const avgMs = totalMs / g.trials.length;
+                
+                const maxMs = Math.max(...timesMs);
+                const minMs = Math.min(...timesMs);
+                const accuracyRangeMs = (maxMs - minMs) / 2;
+                const accuracyRangeSec = (accuracyRangeMs / 1000).toFixed(2);
+
+                report += `Average Time: ${formatMs(avgMs)}\n`;
+                report += `Accuracy Range: +- ${accuracyRangeSec}s\n`;
+                report += "Individual Times: " + g.trials.map(t => t.duration).join(", ") + "\n";
+                report += "-----------------------------------------------\n\n";
+            });
+
+            const blob = new Blob([report], {type : 'text/plain'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `SandTimer_Lab_Report.txt`; a.click();
         };
 
         document.getElementById('btn-export').onclick = () => {
             const blob = new Blob([JSON.stringify(state.logs, null, 2)], {type : 'application/json'});
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `SandTimerLab_Data.json`; a.click();
         };
+
         document.getElementById('btn-import').onclick = () => document.getElementById('import-input').click();
         document.getElementById('import-input').onchange = (e) => {
             const reader = new FileReader();
-            reader.onload = async (ev) => {
+            reader.onload = (ev) => {
                 try {
                     const data = JSON.parse(ev.target.result);
-                    if (Array.isArray(data)) {
-                        for (const log of data) {
-                             await syncToSupabase(log);
-                        }
-                        state.logs = [...data, ...state.logs];
-                        saveToLocalStorage(); renderLogs();
-                    }
+                    if (Array.isArray(data)) { state.logs = [...data, ...state.logs]; saveToLocalStorage(); renderLogs(); }
                 } catch(err) { alert("Invalid JSON."); }
             };
             reader.readAsText(e.target.files[0]);
         };
 
+        document.getElementById('btn-toggle-analytics').onclick = () => {
+            state.analyticsOpen = !state.analyticsOpen;
+            document.getElementById('analytics-section').classList.toggle('open', state.analyticsOpen);
+            if (state.analyticsOpen) updateAnalytics();
+        };
+
+        document.getElementById('btn-clear-current').onclick = resetStation;
+        const modal = document.getElementById('confirm-modal');
+        document.getElementById('show-confirm-modal').onclick = () => modal.classList.replace('hidden', 'flex');
+        document.getElementById('modal-cancel').onclick = () => modal.classList.replace('flex', 'hidden');
+        document.getElementById('modal-confirm').onclick = async () => {
+            state.logs = []; if (supabaseClient) await supabaseClient.from('trials').delete().neq('id', 0);
+            saveToLocalStorage(); renderLogs(); modal.classList.replace('flex', 'hidden');
+        };
+
         window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT') { 
-                e.preventDefault(); document.getElementById('toggle-timer').click(); return;
-            }
-            if (document.activeElement.tagName === 'INPUT') return;
-            if (state.selectedCell !== null) {
-                const map = { '1': 'small', '2': 'medium', '3': 'large' };
-                if (map[e.key]) { state.grid[state.selectedCell] = map[e.key]; saveToLocalStorage(); renderGrid(); return; }
-                if (e.key === 'Backspace' || e.key === 'Delete') { state.grid[state.selectedCell] = null; saveToLocalStorage(); renderGrid(); return; }
-            }
-            const moveKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD'];
-            if (moveKeys.includes(e.code) && document.activeElement.tagName !== 'TEXTAREA') {
-                e.preventDefault();
-                if (state.selectedCell === null) state.selectedCell = 0;
-                else {
-                    const r = Math.floor(state.selectedCell / 3), c = state.selectedCell % 3;
-                    if (e.code === 'ArrowUp' || e.code === 'KeyW') { if (r > 0) state.selectedCell -= 3; }
-                    else if (e.code === 'ArrowDown' || e.code === 'KeyS') { if (r < 2) state.selectedCell += 3; }
-                    else if (e.code === 'ArrowLeft' || e.code === 'KeyA') { if (c > 0) state.selectedCell -= 1; }
-                    else if (e.code === 'ArrowRight' || e.code === 'KeyD') { if (c < 2) state.selectedCell += 1; }
-                }
-                renderGrid();
-            }
+            if (e.code === 'Space' && !['TEXTAREA', 'INPUT'].includes(document.activeElement.tagName)) { e.preventDefault(); document.getElementById('toggle-timer').click(); }
         });
 
-        document.body.onclick = (e) => { if (e.target.tagName === 'BODY' || e.target.id === 'main-grid') { state.selectedCell = null; renderGrid(); } };
         loadData();
         lucide.createIcons();
     </script>
